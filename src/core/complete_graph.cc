@@ -1,0 +1,100 @@
+#include "xtsp/core/complete_graph.h"
+
+#include <Eigen/Dense> // array ops
+#include <exception>
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/bundled/format.h>
+
+namespace xtsp
+{
+  template <typename CostTy>
+  AbstractCompGraph<CostTy>::AbstractCompGraph(const std::shared_ptr<Clustering> clustering)
+    : mCluster(clustering)
+  {
+  }
+
+  template <typename CostTy>
+  size_t AbstractCompGraph<CostTy>::numCluster() const
+  {
+    return (mCluster == nullptr) ? 1 : mCluster->numClusters();
+  }
+
+  template <typename CostTy>
+  bool AbstractCompGraph<CostTy>::isClustered() const
+  {
+    return !(mCluster == nullptr);
+  }
+
+  template <typename CostTy>
+  CompleteGraph<CostTy>::CompleteGraph(
+    bool isSymmetric, 
+    const Eigen::Matrix<CostTy, -1, -1>& edgeCosts, 
+    const std::shared_ptr<Clustering> clustering)
+    : AbstractCompGraph<CostTy>(clustering), 
+      m_symmetric(isSymmetric),
+      m_mat(edgeCosts)
+  {
+    if (m_mat.rows() != m_mat.cols())
+    {
+      throw std::invalid_argument("The edge cost matrix must be square!");
+    }
+
+    // https://stackoverflow.com/questions/13403982/eigen-efficient-type-for-dense-symmetric-matrix
+    // somehow fail to compile
+    // m_mat = (m_symmetric) ? edgeCosts.selfadjointView<Eigen::Lower>() : edgeCosts;
+    if (isSymmetric)
+    {
+      // enforce symmetry 
+      // (by copying from the lower triangle to the upper triangle)
+      for (size_t i = 0; i < m_mat.rows() - 1; ++i)
+        for (size_t j = i+1; j < m_mat.cols(); ++j)
+          m_mat(i,j) = m_mat(j,i);
+    }
+
+    /// check also if >= 0 ?
+    for (size_t i = 0; i < m_mat.rows(); ++i)
+    {
+      for (size_t j = 0; j < m_mat.cols(); ++j)
+      {
+        if (m_mat(i,j) < static_cast<CostTy>(0))
+        {
+          std::string errMsg = spdlog::fmt_lib::format(
+            "Invalid error cost matrix because the edge cost "
+            "from {:d} to {:d} is negative. Some algorithms/analysis will fail", 
+            i, j);
+          throw std::invalid_argument(errMsg);
+        }
+      }
+    }
+  }
+
+  template <typename CostTy>
+  bool CompleteGraph<CostTy>::isSymmetric() const
+  {
+      return m_symmetric;
+  }
+
+  template <typename CostTy, size_t nDim>
+  ImplicitCompleteGraph<CostTy, nDim>::ImplicitCompleteGraph(
+    const Eigen::Matrix<CostTy, -1, nDim>& xy, 
+    const std::shared_ptr<Clustering> clustering)
+    : AbstractCompGraph<CostTy>(clustering), 
+      m_xy(xy)
+  {
+    /// @todo perhaps preevaluate the cost for small-instance problems?
+    /// @todo precompute K-d tree
+  }
+
+  template <typename CostTy, size_t nDim>
+  const Eigen::Matrix<CostTy, -1, nDim>& ImplicitCompleteGraph<CostTy, nDim>::getXy() const
+  {
+    return m_xy;
+  }
+
+
+  // explicit instantiation
+  template class CompleteGraph<float>;
+  template class CompleteGraph<int>;
+  template class ImplicitCompleteGraph<float, 2>;
+  template class ImplicitCompleteGraph<float, 3>;
+} // namespace xtsp
