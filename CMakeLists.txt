@@ -12,8 +12,10 @@ find_package(GTest CONFIG REQUIRED)
 add_subdirectory(deps/spdlog)
 
 add_library(${PROJECT_NAME}
+    src/core/utils.cc
     src/core/clustering.cc
     src/core/complete_graph.cc
+    src/core/tour.cc
 )
 target_include_directories(${PROJECT_NAME}
     PUBLIC include 
@@ -27,8 +29,10 @@ target_link_libraries(${PROJECT_NAME}
 enable_testing()
 
 add_executable(test_core
+    tests/core/test_utils.cc
     tests/core/test_clustering.cc
     tests/core/test_complete_graph.cc
+    tests/core/test_tour.cc
 )
 target_link_libraries(test_core PRIVATE ${PROJECT_NAME} GTest::gtest GTest::gtest_main)
 add_test(test_core ${CMAKE_BINARY_DIR}/test_core)
