@@ -63,6 +63,7 @@ protected:
 TEST_F(VerySmallImplicitCompleteGraph2D, normTy2)
 {
   xtsp::ImplicitCompleteGraph<float> g(xy, nullptr);
+  EXPECT_EQ(g.nDim(), 2);
   EXPECT_FLOAT_EQ(g.getEdgeCost(0, 1), 5.);
   EXPECT_FLOAT_EQ(g.getEdgeCost(1, 2), std::sqrt(4+9));
   EXPECT_FLOAT_EQ(g.getEdgeCost(2, 0), std::sqrt(2));
@@ -97,8 +98,8 @@ protected:
 };
 TEST_F(SimpleImplicitCompleteGraph3D, costQuery)
 {
-  xtsp::ImplicitCompleteGraph<float, 3> g (this->xyz);
-
+  xtsp::ImplicitCompleteGraph<float> g (this->xyz);
+  EXPECT_EQ(g.nDim(), 3);
   EXPECT_TRUE(g.isSymmetric());
   EXPECT_FALSE(g.isClustered());
 

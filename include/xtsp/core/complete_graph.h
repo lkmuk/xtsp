@@ -76,16 +76,16 @@ namespace xtsp
   /// For really large point set (say in millions),
   /// Most computers won't have enough RAM to store the whole cost matrix explicitly.
   /// So we create this class.
+  ///
+  /// We denote nDim as the number of dimension of each point.
+  ///
   /// @tparam CostTy the base datatype for representing edge costs.
   ///         It should be a floating-point type!
-  /// @tparam nDim number of dimension of each point.
-  ///         While constructing please explicitly specify this 
-  ///         because auto-deduction may fail and 
-  ///         give you confusing compiler errors.
+  /// 
   ///
   /// @todo support explicitly pre-computation of the edge cost if N is small enough
   /// 
-  template <typename CostTy = float, size_t nDim = 2> 
+  template <typename CostTy = float> 
   class ImplicitCompleteGraph : public AbstractCompGraph<CostTy>
   {
   public:
@@ -93,9 +93,12 @@ namespace xtsp
     /// @param clustering
     /// @param normType 2 -- Euclidean, 1 -- Manhattan, 0 -- maxNorm
     ImplicitCompleteGraph(
-      const Eigen::Matrix<CostTy, -1, nDim>& xy, 
+      const Eigen::Matrix<CostTy, -1, -1>& xy, 
       const std::shared_ptr<Clustering> clustering = nullptr,
       int normType = 2);
+
+    /// @brief the dimension of each data point (typically 2 or 3)
+    size_t nDim() const;
 
     virtual bool isSymmetric() const override
     {
@@ -125,10 +128,10 @@ namespace xtsp
     /// each cluster's (heuristic) "location".
     ImplicitCompleteGraph<CostTy> buildClusterMeans() const;
 
-    const Eigen::Matrix<CostTy, -1, nDim>& getXy() const;
+    const Eigen::Matrix<CostTy, -1, -1>& getXy() const;
 
   protected:
-    Eigen::Matrix<CostTy, -1, nDim> m_xy;
+    Eigen::Matrix<CostTy, -1, -1> m_xy;
     int m_normType;
   };
 } // namespace

@@ -74,31 +74,44 @@ namespace xtsp
       return m_symmetric;
   }
 
-  template <typename CostTy, size_t nDim>
-  ImplicitCompleteGraph<CostTy, nDim>::ImplicitCompleteGraph(
-    const Eigen::Matrix<CostTy, -1, nDim>& xy, 
+  template <typename CostTy>
+  ImplicitCompleteGraph<CostTy>::ImplicitCompleteGraph(
+    const Eigen::Matrix<CostTy, -1, -1>& xy, 
     const std::shared_ptr<Clustering> clustering,
     int normTy)
     : AbstractCompGraph<CostTy>(clustering), 
       m_xy(xy),
       m_normType(normTy)
   {
+    if (xy.cols() == 0)
+      throw std::invalid_argument("xy data cannot be empty (e.g., having no column)");
     if (normTy > 3 || normTy < 0)
       throw std::invalid_argument("norm type must be 0 or 1 or 2.");
     /// @todo perhaps preevaluate the cost for small-instance problems?
     /// @todo precompute K-d tree
   }
 
-  template <typename CostTy, size_t nDim>
-  const Eigen::Matrix<CostTy, -1, nDim>& ImplicitCompleteGraph<CostTy, nDim>::getXy() const
+  template <typename CostTy>
+  const Eigen::Matrix<CostTy, -1, -1>& ImplicitCompleteGraph<CostTy>::getXy() const
   {
     return m_xy;
   }
 
+  template <typename CostTy>
+  size_t ImplicitCompleteGraph<CostTy>::nDim() const
+  {
+    return m_xy.cols();
+  }
+
+  // template <typename CostTy>
+  // AbstractCompGraph<CostTy> loadTsplibProblem(
+  //   std::string_view fpath, bool isGeneralized)
+  // {
+
+  // }
 
   // explicit instantiation
   template class CompleteGraph<float>;
   template class CompleteGraph<int>;
-  template class ImplicitCompleteGraph<float, 2>;
-  template class ImplicitCompleteGraph<float, 3>;
+  template class ImplicitCompleteGraph<float>;
 } // namespace xtsp
