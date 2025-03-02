@@ -43,17 +43,19 @@ namespace xtsp
     const std::shared_ptr<Clustering> clustering)
     : Tour<CostTy>(sequence), m_clusterInfo(clustering)
   {
-    m_cluster2Vertices = std::vector<size_t>(m_clusterInfo->numClusters(), 0);
+    updateCachedClusterSeq();
+    xtsp::utils::assertNoDuplicate(m_cache_clusterSeq, "generalized tour", "cluster");
+  }
 
-    for (size_t rank = 0; rank < this->size(); ++rank)
+  template <typename CostTy>
+  void GeneralizedTour<CostTy>::updateCachedClusterSeq()
+  {
+    m_cache_clusterSeq.clear();
+    for (const size_t vertexId : this->m_seq)
     {
-      size_t vertexId = this->m_seq[rank];
       size_t whichCluster = m_clusterInfo->getClusterId(vertexId);
-      m_clusterSeq.emplace_back(whichCluster);
-      m_cluster2Vertices[whichCluster] = vertexId;
+      m_cache_clusterSeq.emplace_back(whichCluster);
     }
-
-    xtsp::utils::assertNoDuplicate(m_clusterSeq, "generalized tour", "cluster");
   }
 
   template <typename CostTy>
@@ -72,11 +74,18 @@ namespace xtsp
   size_t GeneralizedTour<CostTy>::findClusterRankById(size_t clusterId) const
   {
     if (clusterId >= this->numClusters())
-      throw std::invalid_argument("the requested cluster ID is too large");
-    auto ite = std::find(m_clusterSeq.cbegin(), m_clusterSeq.cend(), clusterId);
-    size_t result = std::distance(m_clusterSeq.cbegin(), ite);
+      throw std::out_of_range("the requested cluster ID is too large");
+    auto ite = std::find(m_cache_clusterSeq.cbegin(), m_cache_clusterSeq.cend(), clusterId);
+    size_t result = std::distance(m_cache_clusterSeq.cbegin(), ite);
     assert(result < this->numClusters());
     return result;
+  }
+
+  template <typename CostTy>
+  size_t GeneralizedTour<CostTy>::getVertexByClusterId(size_t clusterId) const
+  {
+    size_t clusterRank = findClusterRankById(clusterId);
+    return this->m_seq[clusterRank];
   }
 
   // explicit template instantiation

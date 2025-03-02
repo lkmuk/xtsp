@@ -149,41 +149,25 @@ namespace xtsp
       return m_clusterInfo;
     }
 
+    void updateCachedClusterSeq();
+
     /// @brief reverse look-up
     size_t findClusterRankById(size_t clusterId) const;
 
     size_t getClusterIdByRank(size_t rank) const
     {
-      return m_clusterSeq[rank];
+      return m_cache_clusterSeq[rank];
     }
 
-    size_t getVertexByClusterId(size_t clusterId) const
-    {
-      return m_cluster2Vertices[clusterId];
-    }
-
-    /// @brief Overwrite for each cluster, 
-    ///        which vertex to be visited  
-    ///        while keeping the cluster visit sequence.
-    /// @param cluster2vertex of size M, sorted by cluster index,
-    ///         i.e., \p cluster2vertex[m] is the vertex to be visited
-    ///         for cluster \p m .
-    ///        Caller is responsible to ensure each entry is valid.
-    /// @param newCost the caller should ensure it's correct. 
-    /// @throw if \p cluster2vertex does not have the expected size
-    void setVerticesByClusterId_(
-      const std::vector<size_t> cluster2vertex,
-      CostTy newCost);
+    size_t getVertexByClusterId(size_t clusterId) const;
 
   protected:
     const std::shared_ptr<Clustering> m_clusterInfo;
 
-    /// Lookup-table from rank position to cluster ID
-    std::vector<size_t> m_clusterSeq;
-
-    /// Lookup-table from cluster ID to global vertex ID 
-    /// CAUTION: sorted by cluster index (instead of the position/rank in the generalized tour)
-    std::vector<size_t> m_cluster2Vertices;
+    /// Lookup-table from rank position to cluster ID.
+    /// It shall be updated as long as the object is initialized
+    /// and immediately after the cluster sequence is ever changed.
+    std::vector<size_t> m_cache_clusterSeq;
   };
 
 } // namespace xtsp
