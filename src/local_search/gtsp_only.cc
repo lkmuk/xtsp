@@ -140,6 +140,26 @@ namespace xtsp::algo
     return overallBestCost;
   }
 
+  template <typename CostTy>
+  void GtspClusterOptimizer<CostTy>::improve(
+    xtsp::GeneralizedTour<CostTy> &tour, 
+    const xtsp::AbstractCompGraph<CostTy> &graph, 
+    size_t cutCluster)
+  {
+    // during the solve, we don't need to use tour.m_seq.
+    // So we can safely "reuse" it as the output buffer for
+    // the `solve` call. 
+    // This guarantees that there is no memory allocation
+    // during this `improve` routine.
+    std::vector<size_t> &newTour = tour.getSeqMutableRef__();
+    CostTy newCost = this->solve(tour, graph, cutCluster, newTour);
+    tour.getCostMutableRef() = newCost;
+    
+    // // In the case of Cluster Optimization, 
+    // // no need to update the cache
+    // tour.updateCachedClusterSeq();
+  }
+
 
   // explicit template instantiation
   template class GtspClusterOptimizer<float>;

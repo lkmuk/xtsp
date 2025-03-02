@@ -100,7 +100,7 @@ protected:
   const float m_trueOptCost = 5 + 4 + 3 + 2 + 1 + 3;
 };
 
-TEST_F(ClusterOptimizerToyExample, recommendedUsage)
+TEST_F(ClusterOptimizerToyExample, solveApiWorks)
 {
   spdlog::set_level(spdlog::level::warn);
   auto cutCluster = m_clustering->evalWhichHasTheLeastVertices();
@@ -115,6 +115,24 @@ TEST_F(ClusterOptimizerToyExample, recommendedUsage)
   for (size_t rank = 0; rank < m_clustering->numClusters(); ++rank)
   {
     EXPECT_EQ(computedOptVertices[rank], m_trueOptGenTour[rank]) 
+      << "at tour rank = " << rank;
+  }
+}
+
+TEST_F(ClusterOptimizerToyExample, recommendedApi)
+{
+  spdlog::set_level(spdlog::level::warn);
+  auto cutCluster = m_clustering->evalWhichHasTheLeastVertices();
+
+  // System under test
+  xtsp::algo::GtspClusterOptimizer<float> solver(m_clustering->numVertices());
+  solver.improve(*m_tour, *m_graph, cutCluster);
+
+  ASSERT_EQ(m_tour->size(), m_clustering->numClusters());
+  EXPECT_FLOAT_EQ(m_tour->getCost(), m_trueOptCost);
+  for (size_t rank = 0; rank < m_clustering->numClusters(); ++rank)
+  {
+    EXPECT_EQ(m_tour->getVertex(rank), m_trueOptGenTour[rank]) 
       << "at tour rank = " << rank;
   }
 }

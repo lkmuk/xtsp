@@ -90,6 +90,27 @@ namespace xtsp
         const xtsp::AbstractCompGraph<CostTy> &graph, 
         size_t cutCluster,
         std::vector<size_t>& optimalTour);
+
+      /**
+       * @brief Improve the existing g-tour using Cluster Optimization
+       * 
+       * A convenient wrapper calling \p this->solve and then
+       * update \p tour accordingly.
+       * 
+       * Tip: To retrieve the cost after this call, 
+       * simply call \p tour.getCost()
+       * 
+       * @param[in, out] tour After the call, the cluster sequence 
+       *             will be kept but the choice vertex of each cluster
+       *             will generally be changed. 
+       * @param[in] graph 
+       * @param[in] cutCluster 
+       * @see \p solve
+       */
+      void improve(
+        xtsp::GeneralizedTour<CostTy> &tour, 
+        const xtsp::AbstractCompGraph<CostTy> &graph, 
+        size_t cutCluster);
     };
 
   } // namespace algo  

@@ -76,10 +76,23 @@ namespace xtsp
     /// ===========================================
 
     /// @brief get a mutable reference to the cached cost value.
-    ///  Use cases: setting/updating the cost after each opts
+    ///  Use cases: setting/updating the cost after each 
+    ///  tour improvement.  
     virtual CostTy& getCostMutableRef() final
     {
       return m_cost;
+    }
+
+    /// @brief get a mutable reference to the sequence.
+    /// 
+    /// Caller must ensure the tour remains valid.
+    /// We provide this function simply for performance reason:
+    /// guaranteeing no memory allocation if it's not needed.
+    /// 
+    /// @see \p xtsp::algo::GtspClusterOptimizer<CostTy>::improve
+    virtual std::vector<size_t>& getSeqMutableRef__() final
+    {
+      return m_seq;
     }
 
     /// @brief evaluate the cost of a Hamiltonian/generalized tour over the \p graph
