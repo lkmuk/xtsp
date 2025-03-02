@@ -4,7 +4,6 @@
 // #include "../expect_throw_and_msg.h"
 #include <spdlog/spdlog.h>
 
-namespace fmt = spdlog::fmt_lib;
 
 
 TEST(clustering, successfulInit)
@@ -22,6 +21,11 @@ TEST(clustering, successfulInit)
 
   EXPECT_EQ(clustering.numClusters(), 4);
   EXPECT_EQ(clustering.numVertices(), 8);
+  EXPECT_EQ(clustering.evalWhichHasTheLeastVertices(), 3);
+  EXPECT_EQ(clustering.getClusterSize(0), 2);
+  EXPECT_EQ(clustering.getClusterSize(1), 3);
+  EXPECT_EQ(clustering.getClusterSize(2), 2);
+  EXPECT_EQ(clustering.getClusterSize(3), 1);
 
   const std::vector<size_t> expectedRes = {
       2, 1, 1, 2, 0, 1, 0, 3};
@@ -100,4 +104,23 @@ TEST(clustering, catchTwoPartitionsOverlap)
   {
       EXPECT_EQ(actualException.what(), expectedMsg);
   }
+}
+
+TEST(clustering, cumsum)
+{
+  // the number of vertices in each of the 3 clusters
+  std::vector<size_t> distribution {2, 3, 1};
+  auto clustering = xtsp::Clustering::cumsum(distribution);
+  ASSERT_EQ(clustering.numClusters(), 3);
+  for (size_t mm = 0; mm < distribution.size(); ++mm)
+  {
+    ASSERT_EQ(clustering.getMembers(mm).size(), distribution[mm]);
+  }
+  EXPECT_EQ(clustering.getMembers(0)[0], 0);
+  EXPECT_EQ(clustering.getMembers(0)[1], 1);
+  EXPECT_EQ(clustering.getMembers(1)[0], 2);
+  EXPECT_EQ(clustering.getMembers(1)[1], 3);
+  EXPECT_EQ(clustering.getMembers(1)[2], 4);
+  EXPECT_EQ(clustering.getMembers(2)[0], 5);
+  EXPECT_EQ(clustering.numVertices(), 6);
 }

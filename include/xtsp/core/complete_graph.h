@@ -23,6 +23,10 @@ namespace xtsp
 
     virtual size_t numCluster() const final;
     virtual bool isClustered() const final;
+    virtual const std::shared_ptr<Clustering> getClusteringInfo() const final
+    {
+      return mCluster;
+    }
 
   protected:
     // how the vertices are clustered (nullptr means no clustering)

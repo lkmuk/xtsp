@@ -139,6 +139,14 @@ namespace xtsp
 
     size_t numClusters() const;
     size_t numVertices() const;
+    
+    const std::shared_ptr<Clustering>& getClusteringInfo() const
+    {
+      return m_clusterInfo;
+    }
+
+    /// @brief reverse look-up
+    size_t findClusterRankById(size_t clusterId) const;
 
     size_t getClusterIdByRank(size_t rank) const
     {

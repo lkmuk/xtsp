@@ -7,7 +7,6 @@
 
 namespace xtsp
 {
-  namespace fmt = spdlog::fmt_lib;
 
   template <typename CostTy>
   Tour<CostTy>::Tour(const std::vector<size_t>& sequence, size_t numVertices)
@@ -67,6 +66,17 @@ namespace xtsp
   size_t GeneralizedTour<CostTy>::numVertices() const
   {
     return m_clusterInfo->numVertices();
+  }
+
+  template <typename CostTy>
+  size_t GeneralizedTour<CostTy>::findClusterRankById(size_t clusterId) const
+  {
+    if (clusterId >= this->numClusters())
+      throw std::invalid_argument("the requested cluster ID is too large");
+    auto ite = std::find(m_clusterSeq.cbegin(), m_clusterSeq.cend(), clusterId);
+    size_t result = std::distance(m_clusterSeq.cbegin(), ite);
+    assert(result < this->numClusters());
+    return result;
   }
 
   // explicit template instantiation

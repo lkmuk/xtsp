@@ -20,4 +20,5 @@ tmp/
 ## C/C++ projects
 ##################################
 build/
+build_*/
 .vscode/

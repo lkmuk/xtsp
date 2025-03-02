@@ -4,7 +4,6 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/bundled/format.h>
 
-namespace fmt = spdlog::fmt_lib;
 
 TEST(hamiltonianTour, successfulInit)
 {
@@ -84,6 +83,12 @@ TEST(generalizedTour, successfulInit)
   EXPECT_EQ(gtour.getClusterIdByRank(0), 2);
   EXPECT_EQ(gtour.getClusterIdByRank(1), 0);
   EXPECT_EQ(gtour.getClusterIdByRank(2), 1);
+
+  // reverse lookup from the internal data
+  EXPECT_EQ(gtour.findClusterRankById(0), 1);
+  EXPECT_EQ(gtour.findClusterRankById(1), 2);
+  EXPECT_EQ(gtour.findClusterRankById(2), 0);
+
 
   EXPECT_EQ(gtour.getVertexByClusterId(0), 2);
   EXPECT_EQ(gtour.getVertexByClusterId(1), 4);

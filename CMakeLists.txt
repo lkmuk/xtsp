@@ -5,7 +5,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_POSITION_INDEPENDENT_CODE FALSE)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math -fopenmp")
+# message(${CMAKE_CXX_COMPILER_ID})
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+message("setting extra compiler flags")    
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -ffast-math")
+endif()
 
 find_package(Eigen3 CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)
@@ -16,6 +20,7 @@ add_library(${PROJECT_NAME}
     src/core/clustering.cc
     src/core/complete_graph.cc
     src/core/tour.cc
+    src/local_search/gtsp_only.cc
 )
 target_include_directories(${PROJECT_NAME}
     PUBLIC include 
@@ -36,3 +41,9 @@ add_executable(test_core
 )
 target_link_libraries(test_core PRIVATE ${PROJECT_NAME} GTest::gtest GTest::gtest_main)
 add_test(test_core ${CMAKE_BINARY_DIR}/test_core)
+
+add_executable(test_local_search
+    tests/local_search/test_gtsp_only.cc
+)
+target_link_libraries(test_local_search PRIVATE ${PROJECT_NAME} GTest::gtest GTest::gtest_main)
+add_test(test_local_search ${CMAKE_BINARY_DIR}/test_local_search)

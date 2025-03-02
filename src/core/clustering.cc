@@ -83,4 +83,51 @@ namespace xtsp
     }
   }
 
+  size_t Clustering::getClusterSize(size_t clusterId) const
+  {
+    return m_c2v[clusterId].size();
+  }
+
+  size_t Clustering::evalWhichHasTheLeastVertices() const
+  {
+    size_t minSoFar = std::numeric_limits<size_t>::max();
+    for (size_t i = 0; i < numClusters(); ++i)
+    {
+      size_t sizeOfThisCluster = getClusterSize(i);
+      // early exit
+      if (sizeOfThisCluster == 1)
+        return i;
+      
+      if (sizeOfThisCluster < minSoFar)
+        minSoFar = sizeOfThisCluster;
+    }
+    return minSoFar;
+  }
+
+  Clustering Clustering::cumsum(const std::vector<size_t>& clustersSizes)
+  {
+    if (clustersSizes.empty())
+      throw std::invalid_argument("clustersSizes should be non-empty");
+    
+    std::vector<std::vector<size_t>> membership;
+    // `head` is the total number of vertices processed so far.
+    // it is increment in bulk for each cluster.
+    size_t head = 0;
+    for (const size_t sizeThisCluster : clustersSizes)
+    {
+      if (sizeThisCluster == 0)
+        throw std::invalid_argument(
+          "a cluster is declared as empty, which is not allowed here");
+      // member(s) of this cluster
+      std::vector<size_t> members;
+      for (size_t i = 0; i < sizeThisCluster; ++i)
+      {
+        members.emplace_back(i+head);
+      }
+      head = members.back()+1; // update for the next generation
+      membership.emplace_back(members);
+    }
+    
+    return Clustering(head, std::move(membership));
+  }
 } // namespace xtsp
