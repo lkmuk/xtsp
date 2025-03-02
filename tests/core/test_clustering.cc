@@ -48,6 +48,23 @@ TEST(clustering, queryCluster)
   }
 }
 
+TEST(clustering, catchEmptyCluster)
+{
+  // change this
+  const std::string expectedMsg = 
+    "Invalid clustering because cluster 1 is empty.";
+  try
+  {
+      // change this
+      xtsp::Clustering cluster(4, {{0}, {}, {3, 1, 2}});
+      FAIL() << fmt::format("Should have thrown an exception: {}", expectedMsg);
+  } 
+  catch (const std::invalid_argument& actualException)
+  {
+      EXPECT_EQ(actualException.what(), expectedMsg);
+  }
+}
+
 TEST(clustering, catchInvalidVertex)
 {
   // change this
