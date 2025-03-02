@@ -49,6 +49,40 @@ TEST_F(SimpleCompleteGraphInt, symmetricCostQuery)
         << "wrong edge cost value at (i,j) = (" << i << ", " << j << ")";
 }
 
+class VerySmallImplicitCompleteGraph2D : public testing::Test
+{
+protected:
+  const Eigen::Matrix<float,-1, 2> xy
+  {
+    {-1, 1},
+    {2, -3},
+    {0, 0},
+  };
+};
+
+TEST_F(VerySmallImplicitCompleteGraph2D, normTy2)
+{
+  xtsp::ImplicitCompleteGraph<float> g(xy, nullptr);
+  EXPECT_FLOAT_EQ(g.getEdgeCost(0, 1), 5.);
+  EXPECT_FLOAT_EQ(g.getEdgeCost(1, 2), std::sqrt(4+9));
+  EXPECT_FLOAT_EQ(g.getEdgeCost(2, 0), std::sqrt(2));
+}
+TEST_F(VerySmallImplicitCompleteGraph2D, normTy1)
+{
+  xtsp::ImplicitCompleteGraph<float> g(xy, nullptr, 1);
+  EXPECT_FLOAT_EQ(g.getEdgeCost(0, 1), 7.);
+  EXPECT_FLOAT_EQ(g.getEdgeCost(1, 2), 5.);
+  EXPECT_FLOAT_EQ(g.getEdgeCost(2, 0), 2.);
+}
+TEST_F(VerySmallImplicitCompleteGraph2D, normTyInf)
+{
+  xtsp::ImplicitCompleteGraph<float> g(xy, nullptr, 0);
+  EXPECT_FLOAT_EQ(g.getEdgeCost(0, 1), 4.);
+  EXPECT_FLOAT_EQ(g.getEdgeCost(1, 2), 3.);
+  EXPECT_FLOAT_EQ(g.getEdgeCost(2, 0), 1.);
+}
+
+
 class SimpleImplicitCompleteGraph3D : public testing::Test
 {
 protected:

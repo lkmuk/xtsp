@@ -89,9 +89,13 @@ namespace xtsp
   class ImplicitCompleteGraph : public AbstractCompGraph<CostTy>
   {
   public:
+    /// @param xy the list of points (N x nDim)
+    /// @param clustering
+    /// @param normType 2 -- Euclidean, 1 -- Manhattan, 0 -- maxNorm
     ImplicitCompleteGraph(
       const Eigen::Matrix<CostTy, -1, nDim>& xy, 
-      const std::shared_ptr<Clustering> clustering = nullptr);
+      const std::shared_ptr<Clustering> clustering = nullptr,
+      int normType = 2);
 
     virtual bool isSymmetric() const override
     {
@@ -99,7 +103,15 @@ namespace xtsp
     }
     virtual CostTy getEdgeCost(size_t from, size_t to) const override
     {
-      return (m_xy.row(from) - m_xy.row(to)).norm();
+      switch (m_normType)
+      {
+        case 2:
+          return (m_xy.row(from) - m_xy.row(to)).norm();
+        case 1:
+          return (m_xy.row(from) - m_xy.row(to)).array().abs().sum();
+        default: // maxNorm, aka. L_infinty
+          return (m_xy.row(from) - m_xy.row(to)).array().abs().maxCoeff();
+      }
     }
     virtual size_t numVertices() const override
     {
@@ -117,6 +129,7 @@ namespace xtsp
 
   protected:
     Eigen::Matrix<CostTy, -1, nDim> m_xy;
+    int m_normType;
   };
 } // namespace
 

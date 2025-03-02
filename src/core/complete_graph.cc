@@ -77,10 +77,14 @@ namespace xtsp
   template <typename CostTy, size_t nDim>
   ImplicitCompleteGraph<CostTy, nDim>::ImplicitCompleteGraph(
     const Eigen::Matrix<CostTy, -1, nDim>& xy, 
-    const std::shared_ptr<Clustering> clustering)
+    const std::shared_ptr<Clustering> clustering,
+    int normTy)
     : AbstractCompGraph<CostTy>(clustering), 
-      m_xy(xy)
+      m_xy(xy),
+      m_normType(normTy)
   {
+    if (normTy > 3 || normTy < 0)
+      throw std::invalid_argument("norm type must be 0 or 1 or 2.");
     /// @todo perhaps preevaluate the cost for small-instance problems?
     /// @todo precompute K-d tree
   }
