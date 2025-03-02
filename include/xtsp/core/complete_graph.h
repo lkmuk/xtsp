@@ -21,20 +21,23 @@ namespace xtsp
     virtual CostTy getEdgeCost(size_t from, size_t to) const = 0;
     virtual size_t numVertices() const = 0;
 
-    virtual size_t numCluster() const final;
+    virtual size_t numClusters() const final;
     virtual bool isClustered() const final;
     virtual const std::shared_ptr<Clustering> getClusteringInfo() const final
     {
-      return mCluster;
+      return m_clustering;
     }
 
   protected:
     // how the vertices are clustered (nullptr means no clustering)
-    const std::shared_ptr<Clustering> mCluster = nullptr;
+    const std::shared_ptr<Clustering> m_clustering = nullptr;
     
     // "protected" so that nobody can accidentally instantiate
     // this Abstract class
     AbstractCompGraph(const std::shared_ptr<Clustering> clustering = nullptr);
+
+    // to remove Wdelete-non-abstract-non-virtual-dtor warning
+    virtual ~AbstractCompGraph() = default;
   };
 
   /// @brief Weighted, complete graph with explicit representation of edge costs.

@@ -117,6 +117,10 @@ namespace xtsp
     // This constructor only ensures the tour doesn't visit any vertex more than once.
     // Use case: GeneralizedTour's construction
     Tour(const std::vector<size_t>& sequence);
+
+  public: 
+    // to remove Wdelete-non-abstract-non-virtual-dtor warning
+    virtual ~Tour() = default;
   };
 
   template <typename CostTy>
@@ -126,9 +130,9 @@ namespace xtsp
     /// @brief initialize a VALID generalized tour 
     ///        (over a complete graph implied by \p clustering .)
     /// @throw std::invalid_argument if \p clustering is incompatible 
-    ///        with \p sequence .
+    ///        with \p vertexSequence .
     GeneralizedTour(
-      const std::vector<size_t>& sequence, 
+      const std::vector<size_t>& vertexSequence, 
       const std::shared_ptr<Clustering> clustering);
 
     static GeneralizedTour read_tsplib(

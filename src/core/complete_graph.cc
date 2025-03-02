@@ -9,20 +9,20 @@ namespace xtsp
 {
   template <typename CostTy>
   AbstractCompGraph<CostTy>::AbstractCompGraph(const std::shared_ptr<Clustering> clustering)
-    : mCluster(clustering)
+    : m_clustering(clustering)
   {
   }
 
   template <typename CostTy>
-  size_t AbstractCompGraph<CostTy>::numCluster() const
+  size_t AbstractCompGraph<CostTy>::numClusters() const
   {
-    return (mCluster == nullptr) ? 1 : mCluster->numClusters();
+    return (m_clustering == nullptr) ? 1 : m_clustering->numClusters();
   }
 
   template <typename CostTy>
   bool AbstractCompGraph<CostTy>::isClustered() const
   {
-    return !(mCluster == nullptr);
+    return !(m_clustering == nullptr);
   }
 
   template <typename CostTy>
