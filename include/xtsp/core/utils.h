@@ -4,11 +4,18 @@
 #include <vector>
 #include <cstddef>
 #include <string>
+#include <random>
 
 namespace xtsp
 {
   namespace utils
   {
+    // We commit to this RNG algorithm
+    using Rng_T = std::mt19937;
+    
+    /// generate a random permutation from 0 to N-1
+    void genPermutation(Rng_T rng, size_t N, std::vector<size_t>& out);
+
     /// ensure every entry of an array is unique
     /// @param arr
     /// @param[in] arrName how to call an array 

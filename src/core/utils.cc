@@ -3,6 +3,8 @@
 #include <limits>
 #include <exception>
 #include <set>
+#include <random>
+#include <algorithm>
 
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/bundled/format.h>
@@ -95,6 +97,15 @@ namespace xtsp
       //       permName);
       //   throw std::invalid_argument(errMsg);
       // }
+    }
+
+    void genPermutation(Rng_T rng, size_t N, std::vector<size_t>& out)
+    {
+      out.clear();
+      out.reserve(N);
+      for (size_t i = 0; i < N; ++i)
+        out.emplace_back(i);
+      std::shuffle(out.begin(), out.end(), rng);
     }
   } // namespace utils
 } // namespace xtsp

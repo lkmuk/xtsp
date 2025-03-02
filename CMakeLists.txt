@@ -35,6 +35,7 @@ enable_testing()
 
 add_executable(test_core
     tests/core/test_utils.cc
+    tests/core/test_utils_rng.cc
     tests/core/test_clustering.cc
     tests/core/test_complete_graph.cc
     tests/core/test_tour.cc
