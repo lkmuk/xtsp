@@ -46,23 +46,23 @@ namespace xtsp
     {
       // enforce symmetry 
       // (by copying from the lower triangle to the upper triangle)
-      for (size_t i = 0; i < m_mat.rows() - 1; ++i)
-        for (size_t j = i+1; j < m_mat.cols(); ++j)
+      for (size_t i = 0; i < static_cast<size_t>(m_mat.rows()) - 1; ++i)
+        for (size_t j = i+1; j < static_cast<size_t>(m_mat.cols()); ++j)
           m_mat(i,j) = m_mat(j,i);
     }
 
     /// check also if >= 0 ?
-    for (size_t i = 0; i < m_mat.rows(); ++i)
+    for (size_t i = 0; i < static_cast<size_t>(m_mat.rows()); ++i)
     {
-      for (size_t j = 0; j < m_mat.cols(); ++j)
+      for (size_t j = 0; j < static_cast<size_t>(m_mat.cols()); ++j)
       {
         if (m_mat(i,j) < static_cast<CostTy>(0))
         {
-          std::string errMsg = spdlog::fmt_lib::format(
-            "Invalid error cost matrix because the edge cost "
-            "from {:d} to {:d} is negative. Some algorithms/analysis will fail", 
-            i, j);
-          throw std::invalid_argument(errMsg);
+          spdlog::warn(
+            "The cost for edge {:d}->{:d} is negative. "
+            "Some algorithms/tools will fail",
+            i, j
+          );
         }
       }
     }

@@ -5,7 +5,6 @@
 #include <spdlog/fmt/bundled/format.h>
 
 
-namespace fmt = spdlog::fmt_lib;
 
 TEST(assertNoDuplicate, success)
 {

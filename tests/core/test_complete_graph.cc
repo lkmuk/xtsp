@@ -24,8 +24,8 @@ TEST_F(SimpleCompleteGraphInt, asymmetricCostQuery)
   EXPECT_FALSE(g.isSymmetric());
   EXPECT_FALSE(g.isClustered());
 
-  for (size_t i = 0; i < costMatrix.rows(); ++i)
-    for (size_t j = 0; j < costMatrix.cols(); ++j)
+  for (size_t i = 0; i < (size_t)costMatrix.rows(); ++i)
+    for (size_t j = 0; j < (size_t)costMatrix.cols(); ++j)
       EXPECT_EQ(g.getEdgeCost(i,j), this->costMatrix(i,j)) 
         << "wrong edge cost value at (i,j) = (" << i << ", " << j << ")";
 }
@@ -37,13 +37,13 @@ TEST_F(SimpleCompleteGraphInt, symmetricCostQuery)
   EXPECT_TRUE(g.isSymmetric());
   EXPECT_FALSE(g.isClustered());
 
-  for (size_t i = 0; i < costMatrix.rows(); ++i)
-    for (size_t j = 0; j < costMatrix.cols(); ++j)
+  for (size_t i = 0; i < (size_t)costMatrix.rows(); ++i)
+    for (size_t j = 0; j < (size_t)costMatrix.cols(); ++j)
       EXPECT_EQ(g.getEdgeCost(i,j), g.getEdgeCost(j,i)) 
         << "not symmetric at (i,j) = (" << i << ", " << j << ")";
 
   // copied the lower-triangular?
-  for (size_t i = 0; i < costMatrix.rows(); ++i)
+  for (size_t i = 0; i < (size_t)costMatrix.rows(); ++i)
     for (size_t j = 0; j < i; ++j)
       EXPECT_EQ(g.getEdgeCost(i,j), this->costMatrix(i,j)) 
         << "wrong edge cost value at (i,j) = (" << i << ", " << j << ")";

@@ -11,7 +11,6 @@ namespace xtsp
 {
   namespace utils
   {
-    namespace fmt = spdlog::fmt_lib;
 
     void assertNoDuplicate(
       const std::vector<size_t> vec,

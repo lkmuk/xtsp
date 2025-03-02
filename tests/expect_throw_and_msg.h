@@ -14,7 +14,6 @@
 template <typename ExceptionTy = std::invalid_argument>
 inline void expect_throw_thisMsg(std::function<void()> faultyAction, const std::string& expectedMsg)
 {
-    namespace fmt = spdlog::fmt_lib;
 
     static_assert(std::is_base_of<std::exception, ExceptionTy>::value);
     try
