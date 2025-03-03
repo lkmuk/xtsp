@@ -97,6 +97,17 @@ namespace xtsp
       const std::shared_ptr<Clustering> clustering = nullptr,
       int normType = 2);
 
+    /**
+     * @brief Load a TSP or GTSP instance from a (G)TSPLIB-formatted file
+     * 
+     * The implementation is smart enough to deduce whether it's
+     * a TSP and or GTSP instance.
+     * 
+     * @param fpath file path
+     */
+    static ImplicitCompleteGraph<CostTy> loadFromTsplibFile(
+      const std::string& fpath);
+
     /// @brief the dimension of each data point (typically 2 or 3)
     size_t nDim() const;
 

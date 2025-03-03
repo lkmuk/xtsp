@@ -1,0 +1,14 @@
+NAME : badEuc2D
+COMMENT: malformed (too many)
+COMMENT : used for testing parser's exception handling
+TYPE : TSP
+DIMENSION : 6
+EDGE_WEIGHT_TYPE : EUC_2D
+NODE_COORD_SECTION
+1 4350 4425
+2 4500 4425
+3 4300 4825 32
+4 4300 4950
+5 4300 5050
+6 4350 8875
+EOF

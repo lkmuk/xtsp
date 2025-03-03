@@ -5,6 +5,8 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/bundled/format.h>
 
+#include "xtsp/core/tsplib_io.h"
+
 namespace xtsp
 {
   template <typename CostTy>
@@ -89,6 +91,88 @@ namespace xtsp
       throw std::invalid_argument("norm type must be 0 or 1 or 2.");
     /// @todo perhaps preevaluate the cost for small-instance problems?
     /// @todo precompute K-d tree
+  }
+
+  template <typename CostTy>
+  ImplicitCompleteGraph<CostTy> ImplicitCompleteGraph<CostTy>::loadFromTsplibFile(
+      const std::string& fpath)
+  {
+    TsplibParser parser(fpath);
+    std::string errMsg;
+    std::string problemName = parser.seekLineAsString("NAME");
+    SPDLOG_INFO("Parsing tsplib file: NAME = {}", problemName);
+    std::string tspTypeStr = parser.seekLineAsString("TYPE");
+    SPDLOG_INFO("Parsing tsplib file: TYPE = {}", tspTypeStr);
+    enum TsplibFileType tspType = tsplibFileTypeFromString(tspTypeStr);
+    bool isGeneralized = false;
+    switch (tspType)
+    {
+      case TsplibFileType::kGTSP:
+        isGeneralized = true;
+        break;
+      case TsplibFileType::kTSP:
+        isGeneralized = false;
+        break;
+      default:
+        errMsg = fmt::format(
+          "TYPE {} is recognized but not compatible here.", tspTypeStr);
+        SPDLOG_ERROR(errMsg);
+        throw std::invalid_argument(errMsg);
+    }
+
+    int numVertices = parser.seekLineAsInt("DIMENSION");
+    SPDLOG_INFO("Parsing tsplib file: DIMENSION = {}", numVertices);
+    if (numVertices <= 0)
+      throw std::invalid_argument("Bad DIMENSION: should be a positive number");
+
+    int numClusters = 0;
+    if (isGeneralized)
+    {
+      numClusters = parser.seekLineAsInt("GTSP_SETS");
+      SPDLOG_INFO("Parsing tsplib file: GTSP_SETS = {}", numClusters);
+      if (numClusters < 2)
+        throw std::invalid_argument("Bad GTSP_SETS: should be at least 2");
+    }
+
+    size_t nDim = 0;
+    int normType = -100;
+    std::string edgeWeightTypeStr = parser.seekLineAsString("EDGE_WEIGHT_TYPE");
+    enum TsplibEdgeWeightType edgeWeightType 
+      = tsplibEdgeWeightTypeFromString(edgeWeightTypeStr);
+    switch (edgeWeightType)
+    {
+      case TsplibEdgeWeightType::kEUC_2D:
+        nDim = 2;
+        normType = 2;
+        break;
+      case TsplibEdgeWeightType::kEUC_3D:
+        nDim = 3;
+        normType = 2;
+        break;
+      case TsplibEdgeWeightType::kMAN_2D:
+        nDim = 2;
+        normType = 1;
+        break;
+      case TsplibEdgeWeightType::kMAN_3D:
+        nDim = 3;
+        normType = 1;
+        break;
+      default:
+        errMsg = fmt::format(
+          "EDGE_WEIGHT_TYPE {} is recognized but not compatible here.", edgeWeightTypeStr);
+        throw std::invalid_argument(errMsg);
+    }
+
+    Eigen::Matrix<CostTy,-1,-1> xy = parser.seekSectionAsFloat(
+      "NODE_COORD_SECTION", numVertices, nDim, true);
+    SPDLOG_INFO("Parsing tsplib file: successfully parsed the NODE_COORD_SECTION.");
+
+    std::shared_ptr<Clustering> clustering = nullptr;
+    if (isGeneralized)
+      clustering = parser.seekGtspSetSection(numClusters, numVertices);
+    
+    parser.expectReachedEof();
+    return ImplicitCompleteGraph(xy, clustering, normType);
   }
 
   template <typename CostTy>

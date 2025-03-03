@@ -1,0 +1,15 @@
+NAME : fake pr10
+COMMENT : Malformed:
+COMMENT : truncated and tampered from 144-city problem (Padberg/Rinaldi)
+TYPE : TSP
+DIMENSION : 10
+EDGE_WEIGHT_TYPE : EUC_2D
+NODE_COORD_SECTION
+1 4350 4425
+2 4500 4425
+4 4300 4725
+4 4300 4825
+5 4300 4950
+6 4300 5050
+7 4350 8875
+EOF
