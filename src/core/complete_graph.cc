@@ -187,12 +187,36 @@ namespace xtsp
     return m_xy.cols();
   }
 
-  // template <typename CostTy>
-  // AbstractCompGraph<CostTy> loadTsplibProblem(
-  //   std::string_view fpath, bool isGeneralized)
-  // {
+  template <typename CostTy>
+  ImplicitCompleteGraph<CostTy> ImplicitCompleteGraph<CostTy>::buildClusterMeans() const
+  {
+    std::string errMsg;
+    if (!this->isClustered())
+    {
+      errMsg = "The graph is not clustered so buildClusterMeans fails";
+      SPDLOG_ERROR(errMsg); // to locate the line
+      throw std::invalid_argument(errMsg);
+    }
+    if (m_normType != 2)
+    {
+      SPDLOG_WARN(
+        "Cluster centroids derived from averaging may not be meaningful "
+        " when the edge cost isn't L2-norm.");
+    }
+    Eigen::Matrix<CostTy, -1, -1> mean (this->numClusters(), nDim());
+    mean.setZero();
+    for (int m = 0; m < this->numClusters(); ++m)
+    {
+      // since a cluster's vertices may be non-contiguous, 
+      // we have to first add the vertices, then average the sum
+      for (const size_t n : this->m_clustering->getMembers(m))
+        mean.row(m) += m_xy.row(n);
+      mean.row(m) /= this->m_clustering->getClusterSize(m);
+    }
 
-  // }
+    return ImplicitCompleteGraph<CostTy> (mean, this->m_clustering, this->m_normType);
+  }
+
 
   // explicit instantiation
   template class CompleteGraph<float>;

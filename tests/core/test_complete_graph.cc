@@ -124,3 +124,36 @@ TEST_F(SimpleImplicitCompleteGraph3D, costQuery)
     }
   }
 }
+
+TEST(clusterSuperGraph, usingAveraging)
+{
+  // setup the test
+  Eigen::Matrix<float, 9, 2> xyFull;
+  xyFull <<
+    1,3,
+    4,2,
+    7,0,
+    5,1,
+    3,3,
+    3,5,
+    1,5,
+    5,3,
+    4,0;
+  
+  const std::vector<std::vector<size_t>> memberships = {
+    {1, 3, 8, 7},
+    {2},
+    {0, 6, 4, 5}
+  };
+
+  xtsp::ImplicitCompleteGraph<float> g(
+    xyFull, std::make_shared<xtsp::Clustering>(xyFull.rows(), memberships));
+
+  // the test subject
+  auto gSuper = g.buildClusterMeans();
+  ASSERT_EQ(gSuper.numVertices(), g.numClusters());
+  const auto& xySuper = gSuper.getXy();
+  EXPECT_FLOAT_EQ(xySuper(0,0), 4.5); EXPECT_FLOAT_EQ(xySuper(0,1), 1.5);
+  EXPECT_FLOAT_EQ(xySuper(1,0), 7); EXPECT_FLOAT_EQ(xySuper(1,1), 0);
+  EXPECT_FLOAT_EQ(xySuper(2,0), 2); EXPECT_FLOAT_EQ(xySuper(2,1), 4);
+}

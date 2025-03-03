@@ -137,6 +137,8 @@ namespace xtsp
     /// Use case: local-global GTSP meta-heuristics.
     /// Here, simply use arithmetic averaging to determine 
     /// each cluster's (heuristic) "location".
+    ///
+    /// @throw if the graph is not clustered
     ImplicitCompleteGraph<CostTy> buildClusterMeans() const;
 
     const Eigen::Matrix<CostTy, -1, -1>& getXy() const;
