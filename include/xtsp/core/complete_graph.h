@@ -6,6 +6,10 @@
 #include <memory>
 #include <Eigen/Core>
 
+// round a fp number to the nearest integer
+// as suggested in TSPLIB
+#define nint(x) ((int) (x+0.5))
+
 namespace xtsp
 {
   /// @brief Interfaces for a weighted complete graph.

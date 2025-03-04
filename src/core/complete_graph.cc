@@ -7,13 +7,6 @@
 
 #include "xtsp/core/tsplib_io.h"
 
-// round a fp number to the nearest integer
-// as suggested in TSPLIB
-static inline int nint(float x)
-{
-  return (int) (x+0.5);
-}
-
 namespace xtsp
 {
   template <typename CostTy>

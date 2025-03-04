@@ -152,7 +152,7 @@ TEST(SimpleImplicitCompleteGraph2D, explicitize)
   auto gExplicit = g.explicitize(upscale);
   for (size_t i = 0; i < g.numVertices(); ++i)
     for (size_t j = 0; j < g.numVertices(); ++j)
-      EXPECT_EQ(int(g.getEdgeCost(i,j)*upscale), gExplicit.getEdgeCost(i,j)) 
+      EXPECT_EQ(nint(g.getEdgeCost(i,j)*upscale), gExplicit.getEdgeCost(i,j)) 
         << "i = " << i << ", j = " << j;
 }
 
