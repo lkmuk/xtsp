@@ -7,6 +7,13 @@
 
 #include "xtsp/core/tsplib_io.h"
 
+// round a fp number to the nearest integer
+// as suggested in TSPLIB
+static inline int nint(float x)
+{
+  return (int) (x+0.5);
+}
+
 namespace xtsp
 {
   template <typename CostTy>
@@ -188,6 +195,30 @@ namespace xtsp
   }
 
   template <typename CostTy>
+  CompleteGraph<int> ImplicitCompleteGraph<CostTy>::explicitize(float scale) const
+  {
+    if (numVertices() > 10000)
+      SPDLOG_WARN(
+        "You are trying to create a N x N matrix with large N > 10000. "
+        "The conversion may fail due to limited memory.");
+    if (scale < 1)
+      SPDLOG_WARN(
+        "you choose scale = {:.f} but you probably want e.g., scale >= 100", scale);
+
+    Eigen::Matrix<int, -1, -1> costMat(numVertices(), numVertices());
+    costMat.diagonal().setZero();
+    for (int i = 0; i < (int)numVertices(); ++i)
+      for (int j = 0; j < i; ++j)
+      {
+        int e = nint(scale * getEdgeCost(i,j));
+        costMat(i,j) = e; // the lower triangle
+        costMat(j,i) = e; // the upper triangle
+      }
+    return CompleteGraph<int>(true, costMat, this->m_clustering);    
+  }
+
+
+  template <typename CostTy>
   ImplicitCompleteGraph<CostTy> ImplicitCompleteGraph<CostTy>::buildClusterMeans() const
   {
     std::string errMsg;
@@ -205,7 +236,7 @@ namespace xtsp
     }
     Eigen::Matrix<CostTy, -1, -1> mean (this->numClusters(), nDim());
     mean.setZero();
-    for (int m = 0; m < this->numClusters(); ++m)
+    for (size_t m = 0; m < this->numClusters(); ++m)
     {
       // since a cluster's vertices may be non-contiguous, 
       // we have to first add the vertices, then average the sum

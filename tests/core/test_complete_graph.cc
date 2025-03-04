@@ -125,6 +125,37 @@ TEST_F(SimpleImplicitCompleteGraph3D, costQuery)
   }
 }
 
+TEST(SimpleImplicitCompleteGraph2D, explicitize)
+{
+  // setup the test
+  Eigen::Matrix<float, 6, 2> xyFull;
+  xyFull <<
+    1,3,
+    4,2,
+    7,0,
+    5,1,
+    3,3,
+    3,5;
+  
+  // check if the membership is pass currently
+  const std::vector<std::vector<size_t>> memberships = {
+    {1, 3},
+    {2},
+    {0, 4, 5}
+  };
+
+  xtsp::ImplicitCompleteGraph<float> g(
+    xyFull, std::make_shared<xtsp::Clustering>(xyFull.rows(), memberships));
+
+  float upscale = 1000.;
+  // the test subject
+  auto gExplicit = g.explicitize(upscale);
+  for (size_t i = 0; i < g.numVertices(); ++i)
+    for (size_t j = 0; j < g.numVertices(); ++j)
+      EXPECT_EQ(int(g.getEdgeCost(i,j)*upscale), gExplicit.getEdgeCost(i,j)) 
+        << "i = " << i << ", j = " << j;
+}
+
 TEST(clusterSuperGraph, usingAveraging)
 {
   // setup the test

@@ -30,5 +30,13 @@ TEST(farthestInsertion, pr144)
     auto tour = xtsp::algo::farthestInsertion(g);
     SPDLOG_INFO("end construction with tour cost: {:.3f} (+{:.3}% true min)", 
       tour.getCost(), (tour.getCost()-trueMin)/trueMin*100); 
+    float upscale = 1;
+    SPDLOG_INFO("begin explicitization for {} (upscaling: {:.3f})", 
+      name, upscale); // see the timestamp
+    auto gExpanded = g.explicitize(upscale);
+    SPDLOG_INFO("begin construction for {}", name); // see the timestamp
+    auto tourInt = xtsp::algo::farthestInsertion(gExpanded);
+    SPDLOG_INFO("end construction with tour cost: {:d} (+{:.3}% true min)", 
+      tourInt.getCost(), (((float)tourInt.getCost()/upscale)-trueMin)/trueMin*100); 
   }
 }

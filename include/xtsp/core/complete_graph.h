@@ -132,6 +132,8 @@ namespace xtsp
       return m_xy.rows();
     }
 
+    CompleteGraph<int> explicitize(float scale) const;
+
     /// @brief Construct super-graph where 
     /// each vertex corresponds to a cluster of this graph.
     /// Use case: local-global GTSP meta-heuristics.
