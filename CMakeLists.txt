@@ -24,6 +24,7 @@ add_library(${PROJECT_NAME}
     src/core/tsplib_io_seek_impl.cc
     src/initialization/insertion.cc
     src/local_search/gtsp_only.cc
+    src/toolbox/ring_ops.cc
 )
 target_include_directories(${PROJECT_NAME}
     PUBLIC include 

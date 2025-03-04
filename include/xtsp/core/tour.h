@@ -10,7 +10,14 @@
 
 namespace xtsp
 {
-  /// @brief Hamiltonian tour
+  /// @brief Hamiltonian tour (circular array representation)
+  /// 
+  ///  data[i] = vertex ID of at tour position/rank i 
+  ///  
+  ///  This representation is well-suited for book-keeping,
+  ///  crossover operators in Genetic Algorithms 
+  ///  
+  /// 
   /// @tparam CostTy (needs to be a signed numeric type)
   template <typename CostTy>
   class Tour
@@ -114,10 +121,20 @@ namespace xtsp
       return cost;
     }
 
-
-    /// @todo update the signature
-    /// @todo update the cost
-    // virtual void applyTwoOpt(void);
+    /**
+     * Swap edges AB and CD in a tour with AC and BD
+     * 
+     * This requires flipping either the segment BC or AD 
+     * (it's left by the algorithm to decide)
+     * 
+     * If improvement is +ve, such an exchange is a 2-opt.
+     * Finding a 2-opt move is outside the scope of this class.
+     * 
+     * @param rankA the rank of vertex A  We require 0 <= \p rankA < N
+     * @param rankC the rank of vertex C. We require \p rankC >= \p rankA + 2. \p rankC can be arbitraily large (we will wrap it).
+     * @param improvement the cost reduction due to such move (can be negative)
+     */
+    virtual void exchangeTwoEdges(size_t rankA, size_t rankC, CostTy improvement);
 
     
   protected:

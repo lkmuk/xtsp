@@ -1,6 +1,7 @@
 #include "xtsp/core/tour.h"
 
 #include "xtsp/core/utils.h"
+#include "../toolbox/ring_ops.h"
 
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/bundled/format.h>
@@ -35,6 +36,17 @@ namespace xtsp
     }
     xtsp::utils::assertIsPermutation(numVertices, m_seq, "tour", "city");
     
+  }
+
+  template <typename CostTy>
+  void Tour<CostTy>::exchangeTwoEdges(size_t rankA, size_t rankC, CostTy improvement)
+  {
+    if (rankA + 1 > rankC)
+      throw std::invalid_argument("expect rankA + 1 > rankC");
+    
+    xtsp::internal::reverseRingSegment_smart(m_seq, rankA, rankC);
+
+    m_cost -= improvement;
   }
 
   template <typename CostTy>

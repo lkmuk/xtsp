@@ -1,6 +1,7 @@
 #include "xtsp/core/tour.h"
 
 #include <gtest/gtest.h>
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_INFO
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/bundled/format.h>
 
@@ -134,4 +135,50 @@ TEST(generalizedTour, catchRevisitClusterWithDifferentVertices)
   {
     EXPECT_EQ(actualException.what(), expectedMsg);
   }
+}
+
+
+TEST(doTwoEdgeExchange, simplestUncrossingExample)
+{
+  // only FYI not really critical in this context
+  Eigen::Matrix<float, 4, 2> xy {
+    {1, 0},
+    {0, 1},
+    {-1, 0},
+    {0, -1}
+  };
+  xtsp::ImplicitCompleteGraph<> g(xy);
+
+  float expectedOldTourCost = std::sqrt(2)*2 + 2*2;
+  float expectedNewTourCost = std::sqrt(2)*4;
+
+  std::vector<size_t> originalTourDat {2, 0, 3, 1};
+  xtsp::Tour<float> tour (originalTourDat, 4);
+  tour.evalTour(g);
+  EXPECT_FLOAT_EQ(tour.getCost(), expectedOldTourCost);
+
+  spdlog::set_level(spdlog::level::debug);
+  const size_t rankA = 1; // vertex 0
+  // const size_t rankB = 2; // vertex 3 (only FYI)
+
+  // ensure rankC >= rank A + 1 (otherwise += numVertices)
+  const size_t rankC = 3; // vertex 1 (in general the rankC >= rankB)
+  // const size_t rankD = 0; // vertex 2 (only FYI)
+  SPDLOG_DEBUG("Tour sequence (before): {:d}-{:d}-{:d}-{:d}-",
+      tour.getVertex_(0), 
+      tour.getVertex_(1), 
+      tour.getVertex_(2), 
+      tour.getVertex_(3)
+    );
+  tour.exchangeTwoEdges(rankA, rankC, expectedOldTourCost-expectedNewTourCost);
+  tour.assertHamiltonian(xy.rows());
+  EXPECT_FLOAT_EQ(tour.getCost(), expectedNewTourCost); // check if the cached cost is updated
+
+  EXPECT_FLOAT_EQ(tour.evalTour(g), expectedNewTourCost); // check if it's legit
+  SPDLOG_DEBUG("Tour sequence (after):  {:d}-{:d}-{:d}-{:d}-",
+      tour.getVertex_(0), 
+      tour.getVertex_(1), 
+      tour.getVertex_(2), 
+      tour.getVertex_(3)
+    );
 }
