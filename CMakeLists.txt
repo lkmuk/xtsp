@@ -22,6 +22,7 @@ add_library(${PROJECT_NAME}
     src/core/tour.cc
     src/core/tsplib_io.cc
     src/core/tsplib_io_seek_impl.cc
+    src/initialization/insertion.cc
     src/local_search/gtsp_only.cc
 )
 target_include_directories(${PROJECT_NAME}
@@ -56,6 +57,13 @@ add_executable(test_io
 )
 target_link_libraries(test_io PRIVATE ${PROJECT_NAME} GTest::gtest GTest::gtest_main)
 add_test(test_io ${CMAKE_BINARY_DIR}/test_io)
+
+add_executable(test_constructTour
+    tests/initialization/test_insertion.cc
+)
+target_link_libraries(test_constructTour 
+  PRIVATE ${PROJECT_NAME} GTest::gtest GTest::gtest_main)
+add_test(test_constructTour ${CMAKE_BINARY_DIR}/test_constructTour)
 
 add_executable(test_local_search
     tests/local_search/test_gtsp_only.cc
