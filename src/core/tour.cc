@@ -1,4 +1,5 @@
 #include "xtsp/core/tour.h"
+#include "xtsp/core/tour_alternatives.h"
 
 #include "xtsp/core/utils.h"
 #include "../toolbox/ring_ops.h"
@@ -9,6 +10,17 @@
 
 namespace xtsp
 {
+  void AbstractTour::print (std::ostream &os) const
+  {
+    auto vHead = getDepotId();
+    for (size_t rank = 0; rank < size(); ++ rank)
+    {
+      os << vHead << "-";
+      vHead = next(vHead);
+    }
+  }
+
+
   bool AbstractTour::isOneStepAhead(size_t vStart, size_t vGoal) const
   {
     return next(vStart) == vGoal;
@@ -110,12 +122,13 @@ namespace xtsp
 
   void PermTour::exchangeTwoEdges_rankBased(size_t rankA, size_t rankC, bool strict)
   {
-    if (rankA + 1 > rankC)
-      throw std::invalid_argument("expect rankA + 1 > rankC");
+    if (rankA + 1 >= rankC)
+      throw std::invalid_argument("expect rankA + 1 < rankC");
+    size_t rankB = rankA + 1;
     if (strict)
-      xtsp::internal::reverseRingSegment_strict(m_seq, rankA, rankC);
+      xtsp::internal::reverseRingSegment_strict(m_seq, rankB, rankC);
     else
-      xtsp::internal::reverseRingSegment_smart(m_seq, rankA, rankC);
+      xtsp::internal::reverseRingSegment_smart(m_seq, rankB, rankC);
   }
   void PermTour::exchangeTwoEdges(size_t vA, size_t vC, bool strict)
   {
@@ -151,6 +164,103 @@ namespace xtsp
     return m_seq[(rank+1)%size()];
   }
 
+  ////////////////////////////////////////////
+  ///  Adjacency table representation
+  ////////////////////////////////////////////
+  AdjTabTour::AdjTabTour(const std::vector<size_t>& perm, int maxNumVertices, bool checks)
+    : m_N((maxNumVertices < 0) ? perm.size() : maxNumVertices)
+  {
+    if (perm.size() == 0)
+      throw std::invalid_argument(
+        "[constructing a AdjTabTour] the input permutation vector is empty");
+    m_head = perm[0];
+    if (perm.size() > m_N)
+      throw std::invalid_argument(
+        "[constructing a PermTour] maxNumVertices should >= sequence.size()");
+    if (checks)
+    {
+      xtsp::utils::assertNoDuplicate(perm, "tour", "city");
+      xtsp::utils::assertAllValid(m_N, perm, "tour", "city ID");
+    }
+
+    m_cache_tourSize = perm.size();
+    m_dat.reserve(m_N);
+    // a simple implementation that ensures that 
+    // those not yet in the tour also get properly initialized
+    for (size_t v = 0; v < m_N; ++v)
+    {
+      m_dat.emplace_back(v);
+    }
+    for (size_t rank = 0; rank < m_cache_tourSize; ++rank)
+    {
+      size_t vertexId = perm[rank];
+      auto rankPrevWrapped = (rank + m_cache_tourSize - 1)%m_cache_tourSize;
+      auto rankNextWrapped = (rank + m_cache_tourSize + 1)%m_cache_tourSize;
+      m_dat[vertexId].prev = m_dat.data() + perm[rankPrevWrapped];
+      m_dat[vertexId].next = m_dat.data() + perm[rankNextWrapped];
+    }
+    
+  }
+  size_t AdjTabTour::size() const
+  {
+    return m_cache_tourSize;
+  }
+  size_t AdjTabTour::maxSize() const
+  {
+    return m_cache_tourSize;
+  }
+
+  size_t AdjTabTour::next(size_t vertex) const
+  {
+    return m_dat[vertex].next->id;
+  }
+
+  size_t AdjTabTour::getDepotId() const
+  {
+    return m_head;
+  }
+
+  void AdjTabTour::exchangeTwoEdges(
+      size_t vA, size_t vC, bool strict)
+  {
+    // (only in Debug build)
+    /// ensure  everything is valid 
+    assert(isTwoPlusStepsAhead(vA, vC));
+    assert(isTwoPlusStepsAhead(vC, vA));
+
+    const size_t vB = next(vA);
+    const size_t vD = next(vC);
+
+    /// currently we always reverse CD
+    /// i.e., ignoring the strict-flag
+
+    // if the segment CD has some node(s) in between, then ...
+    // modify the underlying data while traversing along 
+    // the (original) tour direction.
+    size_t vHead = next(vC);
+    while (vHead != vD) 
+    {
+      std::swap(m_dat[vHead].prev, m_dat[vHead].next);
+      vHead = m_dat[vHead].prev->id; // i.e., next before the flip
+    }
+
+    m_dat[vA].next = &m_dat[vC]; // was vB
+    m_dat[vD].prev = &m_dat[vB]; // was vC
+
+    // change vB, ..., vC
+    m_dat[vB].prev = m_dat[vB].next;
+    m_dat[vB].next = &m_dat[vD];
+
+    m_dat[vC].next = m_dat[vC].prev;
+    m_dat[vC].prev = &m_dat[vA];
+  }
+
+  
+
+
+  ////////////////////////////////////////////
+  ///  GeneralizedTour
+  ////////////////////////////////////////////
 
   GeneralizedTour GeneralizedTour::fromPermutation(
     const std::vector<size_t>& tour, 

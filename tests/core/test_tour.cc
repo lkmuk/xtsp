@@ -1,4 +1,5 @@
 #include "xtsp/core/tour.h"
+#include "xtsp/core/tour_alternatives.h"
 
 #include <gtest/gtest.h>
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_INFO
@@ -10,6 +11,24 @@ TEST(hamiltonianPermTour, successfulInit)
 {
   xtsp::PermTour tour({3,2,1,0,4});
   EXPECT_EQ(tour.size(), 5);
+}
+
+TEST(hamiltonianAdjTabTour, successfulInit)
+{
+  xtsp::AdjTabTour tour({3,2,1,0,4});
+  EXPECT_EQ(tour.size(), 5);
+  EXPECT_EQ(tour.getDepotId(), 3);
+
+  EXPECT_EQ(tour.next(3), 2);
+  EXPECT_EQ(tour.next(2), 1);
+  EXPECT_EQ(tour.next(1), 0);
+  EXPECT_EQ(tour.next(0), 4);
+  EXPECT_EQ(tour.next(4), 3); // across the cut/depot
+  EXPECT_TRUE(tour.isOneStepAhead(2, 1));
+  EXPECT_TRUE(tour.isOneStepAhead(4, 3)); // across the cut/depot
+
+  EXPECT_TRUE(tour.allElementsAreValid());
+  EXPECT_TRUE(tour.isHamiltonian());
 }
 
 TEST(hamiltonianTour, directAccessSuccess)
@@ -145,53 +164,73 @@ protected:
   const float expectedOldTourCost = std::sqrt(2)*2 + 2*2;
   const float expectedNewTourCost = std::sqrt(2)*4;
   std::vector<size_t> originalTourDat = {2, 0, 3, 1};
-  xtsp::PermTour tour =  xtsp::PermTour(originalTourDat);
+  xtsp::PermTour tourPermType =  xtsp::PermTour(originalTourDat);
+  xtsp::AdjTabTour tourAdjType = xtsp::AdjTabTour(originalTourDat);
   // by eyeballing, we identify a Two-opt
-  const size_t rankA = 1; // vertex 0
-  // const size_t rankB = 2; // vertex 3 (only FYI)
-  // ensure rankC >= rank A + 1 (otherwise += numVertices)
-  const size_t rankC = 3; // vertex 1 (in general the rankC >= rankB)
-  // const size_t rankD = 0; // vertex 2 (only FYI)
-
-  const size_t vA = 0;
-  const size_t vC = 1;
+  const size_t rankA = 2;
+  const size_t rankC = 0+g.numVertices();
+  const size_t vA = 3;
+  const size_t vC = 2;
 
   void SetUp() override
   {
+    spdlog::set_level(spdlog::level::debug);
     SPDLOG_DEBUG("Tour sequence (before): {:d}-{:d}-{:d}-{:d}-",
-      tour.getVertex_(0), 
-      tour.getVertex_(1), 
-      tour.getVertex_(2), 
-      tour.getVertex_(3)
+      tourPermType.getVertex_(0), 
+      tourPermType.getVertex_(1), 
+      tourPermType.getVertex_(2), 
+      tourPermType.getVertex_(3)
     );
-    EXPECT_FLOAT_EQ(xtsp::evalTour(tour, g), expectedOldTourCost) 
+    EXPECT_FLOAT_EQ(xtsp::evalTour(tourPermType, g), expectedOldTourCost) 
       << "bug in the test implementation";
   }
 
-  void checkResultAfterTwoOpt() const
-  {
-    tour.isHamiltonian();
-
-    EXPECT_FLOAT_EQ(xtsp::evalTour(tour, g), expectedNewTourCost); // check if it's legit
-    SPDLOG_DEBUG("Tour sequence (after):  {:d}-{:d}-{:d}-{:d}-",
-        tour.getVertex_(0), 
-        tour.getVertex_(1), 
-        tour.getVertex_(2), 
-        tour.getVertex_(3)
-    );
-  }
 };
 
 TEST_F(SimpleTwoEdgeExchange, permTourRankBased)
 {
-  spdlog::set_level(spdlog::level::debug);
-  tour.exchangeTwoEdges_rankBased(rankA, rankC);
-  checkResultAfterTwoOpt();
+  tourPermType.exchangeTwoEdges_rankBased(rankA, rankC, true);
+  EXPECT_TRUE(tourPermType.isHamiltonian());
+  EXPECT_FLOAT_EQ(xtsp::evalTour(tourPermType, g), expectedNewTourCost);
+  EXPECT_EQ(tourPermType.getVertex_(0), 1);
+  EXPECT_EQ(tourPermType.getVertex_(1), 0);
+  EXPECT_EQ(tourPermType.getVertex_(2), 3);
+  EXPECT_EQ(tourPermType.getVertex_(3), 2);
+  
 }
 
-TEST_F(SimpleTwoEdgeExchange, permTourNative)
+TEST_F(SimpleTwoEdgeExchange, permTour)
 {
-  spdlog::set_level(spdlog::level::debug);
-  tour.exchangeTwoEdges(vA, vC);
-  checkResultAfterTwoOpt();
+  tourPermType.exchangeTwoEdges(vA, vC, true);
+  EXPECT_TRUE(tourPermType.isHamiltonian());
+  EXPECT_FLOAT_EQ(xtsp::evalTour(tourPermType, g), expectedNewTourCost);
+  EXPECT_EQ(tourPermType.getVertex_(0), 1);
+  EXPECT_EQ(tourPermType.getVertex_(1), 0);
+  EXPECT_EQ(tourPermType.getVertex_(2), 3);
+  EXPECT_EQ(tourPermType.getVertex_(3), 2);
+}
+
+TEST_F(SimpleTwoEdgeExchange, adjTabTour)
+{
+
+  EXPECT_TRUE(tourAdjType.isHamiltonian());
+  EXPECT_FLOAT_EQ(xtsp::evalTour(tourAdjType, g), expectedOldTourCost);
+  
+  EXPECT_TRUE(tourAdjType.isTwoPlusStepsAhead(vA,vC));
+  EXPECT_TRUE(tourAdjType.isTwoPlusStepsAhead(vC,vA));
+
+  // test subject
+  tourAdjType.exchangeTwoEdges(vA, vC, true);
+  
+  EXPECT_TRUE(tourAdjType.isHamiltonian());
+  std::cout << "After 2-opt: ";
+  tourAdjType.print(std::cout);
+  std::cout << std::endl;
+  // possible perm:  2 - 1 - 0 - 3 
+  //      1 - 0 - 3 - 2
+  EXPECT_EQ(tourAdjType.next(0), 3);
+  EXPECT_EQ(tourAdjType.next(1), 0);
+  EXPECT_EQ(tourAdjType.next(2), 1);
+  EXPECT_EQ(tourAdjType.next(3), 2);
+  EXPECT_FLOAT_EQ(xtsp::evalTour(tourAdjType, g), expectedNewTourCost);
 }

@@ -6,9 +6,17 @@
 namespace xtsp::internal
 {
   /**
-   * @brief Reverse the segment from [rankStart, rankEnd] (both inclusively)
-   *
-   * Expect rankStart < rankEnd
+   * @brief efficient inplace reversal/flip a segment indicated by [segStart, segEnd]
+   * 
+   * Assumption on @a segEnd and @a segStart 
+   * segSz in [0, array size] where segSz =  @a segEnd - @a segStart
+   * 
+   * We can have both @a segStart and @a segEnd greater than the ring size
+   *      
+   * Special cases
+   * 
+   *  * with no-op, i.e., segSz = 0 or 1
+   *  * segSz = the array size --- i.e., reversing the whole array
    */
   template <typename T>
   void reverseRingSegment_strict(std::vector<T> &ring, size_t rankStart, size_t rankEnd);

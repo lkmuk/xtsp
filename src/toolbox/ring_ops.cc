@@ -4,6 +4,8 @@
 // #include <cstring> // for memcpy
 #include <stdexcept>
 
+#include <spdlog/spdlog.h>
+
 namespace xtsp::internal
 {
   template <typename T>
@@ -12,8 +14,17 @@ namespace xtsp::internal
     int segSz = (int)(rankEnd) - (int)(rankStart);
     if (segSz > (int)ring.size())
       throw std::invalid_argument("invalid segment specification");
-    if (segSz <= 1)
+    if (segSz <= 0)
+    {
+      SPDLOG_WARN("ignoring no-op request: rankStart = {:d}, rankEnd = {:d}",
+        rankStart, rankEnd);
       return;
+    }
+    if (segSz == 1)
+    {
+      std::swap(ring[rankStart%ring.size()], ring[rankEnd%ring.size()]);
+      return;
+    }
     if (segSz == (int)ring.size())
     {
       std::reverse(std::begin(ring), std::end(ring));

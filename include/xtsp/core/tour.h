@@ -66,6 +66,7 @@ namespace xtsp
     
     virtual bool hasNoRevisit() const;
     virtual bool allElementsAreValid() const;
+    virtual void print(std::ostream &o) const;
 
     // following the implied tour direction
     virtual bool isOneStepAhead(size_t vStart, size_t vGoal) const;
@@ -120,8 +121,8 @@ namespace xtsp
      * for symmetric TSPs and symmetric Generalized TSPs.
      * 
      * Note that this operation requires flipping either 
-     * segment BC or AD. If you really want to stipulate 
-     * flipping BC (more relevant for ATSP), then 
+     * segment AB or CD. If you really want to stipulate 
+     * flipping CD (more relevant for ATSP), then 
      * set \p strict as true. Otherwise it's up to the 
      * implementation which one to flip.
      * 
