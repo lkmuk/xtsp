@@ -2,6 +2,8 @@
 #include "xtsp/core/tsplib_io.h"
 // for now test this wrapper first
 #include "xtsp/core/complete_graph.h"
+// we also want to test tour file I/O
+#include "xtsp/core/tour.h" 
 
 #include <gtest/gtest.h>
 #include <filesystem>
@@ -157,3 +159,45 @@ TEST(tsplibParser, catchBadCoordinateLineExtraEntry)
 
 }
 
+class TsplibWriteTour : public testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    spdlog::set_level(spdlog::level::info);
+    m_tmpOutputPath = std::filesystem::temp_directory_path()/"dummyTour.tour";
+    SPDLOG_INFO("tour output filepath : {}", m_tmpOutputPath.c_str());
+  }
+
+  std::filesystem::path m_tmpOutputPath;
+  // this is actually a generalized tour
+  std::vector<size_t> m_perm = {23, 0, 4, 2, 5}; 
+};
+
+TEST_F(TsplibWriteTour, permTour)
+{
+  std::string expectedString = 
+    "NAME : A dummy generalized tour used for unit testing\n"
+    "TYPE : TOUR\n"
+    "DIMENSION : 5\n"
+    "TOUR_SECTION\n"
+    "24\n"
+    "1\n"
+    "5\n"
+    "3\n"
+    "6\n"
+    "-1\n"
+    "EOF\n";
+
+  auto tour = xtsp::PermTour(m_perm, 50); // 50 is just an arbitrary number
+  // Subject under test
+  tour.saveTsplib(m_tmpOutputPath.c_str(), "A dummy generalized tour used for unit testing");
+  std::ifstream retrievedStream (m_tmpOutputPath.c_str());
+
+  std::ostringstream sstr;
+  sstr << retrievedStream.rdbuf();
+  std::string retrievedString = sstr.str();
+
+  EXPECT_EQ(retrievedString, expectedString);
+
+}

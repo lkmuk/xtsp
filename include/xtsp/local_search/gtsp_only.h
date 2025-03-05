@@ -86,7 +86,7 @@ namespace xtsp
        * @sa \p xtsp::Clustering::evalWhichHasTheLeastVertices
        */
       CostTy solve(
-        const xtsp::GeneralizedTour<CostTy> &tour, 
+        const xtsp::GeneralizedTour &tour, 
         const xtsp::AbstractCompGraph<CostTy> &graph, 
         size_t cutCluster,
         std::vector<size_t>& optimalTour);
@@ -105,10 +105,11 @@ namespace xtsp
        *             will generally be changed. 
        * @param[in] graph 
        * @param[in] cutCluster 
+       * @retval new tour cost after the optimization
        * @see \p solve
        */
-      void improve(
-        xtsp::GeneralizedTour<CostTy> &tour, 
+      CostTy improve(
+        xtsp::GeneralizedTour &tour, 
         const xtsp::AbstractCompGraph<CostTy> &graph, 
         size_t cutCluster);
     };

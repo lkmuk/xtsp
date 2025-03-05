@@ -37,10 +37,11 @@ namespace xtsp::internal
   class WorkBuffer
   {
   public:
-    // initialize all items as TODO
-    WorkBuffer(size_t numItems) : m_dat(numItems, true)
+    // uniform initialize all items
+    WorkBuffer(size_t numItems, bool initVal = true) : m_dat(numItems, initVal)
     {
     }
+    // empty means all items are TRUE
     bool isEmpty() const
     {
       return (std::find(m_dat.cbegin(), m_dat.cend(), true) == m_dat.cend());

@@ -1,4 +1,5 @@
 #include "xtsp/core/tsplib_io.h"
+#include "xtsp/core/tour.h"
 
 #include "tsplib_io_seek_impl.h"
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
@@ -6,6 +7,7 @@
 #include <spdlog/fmt/bundled/core.h>
 #include <spdlog/fmt/bundled/ranges.h>
 
+#include <fstream>
 
 typedef std::string string;
 
@@ -157,5 +159,24 @@ namespace xtsp
     }
     errMsg = "Failed to find GTSP_SET_SECTION.";
     throw std::invalid_argument(errMsg);
+  }
+
+  void AbstractTour::saveTsplib(const std::string &fpath, const std::string &name) const
+  {
+    std::ofstream fs (fpath);
+    fs << "NAME : " << name << "\n";
+    fs << "TYPE : TOUR\n";
+    fs << "DIMENSION : " << size() << "\n";
+    fs << "TOUR_SECTION\n";
+    size_t vHead = getDepotId();
+    for (size_t rank = 0; rank < size(); ++rank)
+    {
+        // converting to 1-based indexing
+        fs << vHead + 1 << "\n";
+        vHead = next(vHead);
+    }
+    fs << "-1\n";
+    fs << "EOF\n";
+    fs.close();
   }
 }

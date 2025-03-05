@@ -23,7 +23,20 @@ namespace xtsp
     /// @param[in] entryName how to call an entry of a permutation 
     ///        in the error message, e.g., "element".
     void assertNoDuplicate(
-      const std::vector<size_t> vec,
+      const std::vector<size_t>& vec,
+      const std::string arrName = "array",
+      const std::string entryName = "element");
+
+    /// ensure every entry of an array is unique
+    /// @param arr
+    /// @param upperBound all elements in arr must be smaller than upperBound
+    /// @param[in] arrName how to call an array 
+    ///        in the error message, e.g., "array".
+    /// @param[in] entryName how to call an entry of a permutation 
+    ///        in the error message, e.g., "element".
+    void assertAllValid(
+      size_t upperBound,
+      const std::vector<size_t>& vec,
       const std::string arrName = "array",
       const std::string entryName = "element");
 
@@ -36,7 +49,7 @@ namespace xtsp
     ///        in the error message, e.g., "city".
     void assertIsPermutation(
       size_t N,
-      const std::vector<size_t> perm,
+      const std::vector<size_t>& perm,
       const std::string permName = "permutation", // or "tour"
       const std::string entryName = "vertex" // or "city"
       );

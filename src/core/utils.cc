@@ -15,7 +15,7 @@ namespace xtsp
   {
 
     void assertNoDuplicate(
-      const std::vector<size_t> vec,
+      const std::vector<size_t>& vec,
       const std::string arrName,
       const std::string entryName)
     {
@@ -40,9 +40,29 @@ namespace xtsp
       // }
     }
 
+    void assertAllValid(
+      size_t upperBound,
+      const std::vector<size_t>& vec,
+      const std::string arrName,
+      const std::string entryName)
+    {
+      for (size_t i = 0; i < vec.size(); ++i)
+      {
+        auto val = vec[i];
+        if (val >= upperBound)
+        {
+          std::string errMsg = fmt::format(
+            "Invalid {} because at position {:d}, {} = {:d} >= upper bound = {:d}",
+            arrName, i, entryName, val, upperBound);
+          SPDLOG_ERROR(errMsg);
+          throw std::invalid_argument(errMsg);
+        }
+      }
+    }
+
     void assertIsPermutation(
         size_t N,
-        const std::vector<size_t> perm,
+        const std::vector<size_t>& perm,
         const std::string permName,
         const std::string entryName)
     {
@@ -56,6 +76,9 @@ namespace xtsp
           permName, N, perm.size());
         throw std::invalid_argument(errMsg);
       }
+
+      /// @todo P.s. use xtsp::internal::WorkBuffer
+      
       const size_t uninitializedVal = std::numeric_limits<size_t>::max();
       /// Reverse Lookup: revLut = argsort(perm).
       /// i.e., revLut[i] = position of i in \p perm .

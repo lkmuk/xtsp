@@ -9,7 +9,7 @@
 namespace xtsp::algo
 {
   template <typename CostTy>
-  Tour<CostTy> farthestInsertion(const AbstractCompGraph<CostTy> &g, size_t vFirstPick)
+  PermTour farthestInsertion(const AbstractCompGraph<CostTy> &g, size_t vFirstPick)
   {
     // a straight-forward implementation
 
@@ -96,11 +96,11 @@ namespace xtsp::algo
       verticesToAdd.markDone(vPicked);
     }
 
-    Tour<CostTy> tour(pTour, numV);
-    tour.evalTour(g);
+    PermTour tour(pTour, numV);
+    // tour.evalTour(g);
     return tour;
   }
 
-  template Tour<float> farthestInsertion(const AbstractCompGraph<float> &, size_t);
-  template Tour<int> farthestInsertion(const AbstractCompGraph<int> &, size_t);
+  template PermTour farthestInsertion<float>(const AbstractCompGraph<float> &, size_t);
+  template PermTour farthestInsertion<int>(const AbstractCompGraph<int> &, size_t);
 }

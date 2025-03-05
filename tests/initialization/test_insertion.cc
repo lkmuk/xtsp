@@ -44,17 +44,19 @@ TEST_F(FarthestInsertionTest, pr114)
   spdlog::set_level(spdlog::level::debug);
   SPDLOG_INFO("begin construction for {}", name); // see the timestamp
   auto tour = xtsp::algo::farthestInsertion(g);
+  auto tourCost = xtsp::evalTour(tour, g);
   SPDLOG_INFO("end construction with tour cost: {:.3f} (+{:.3}% true min)", 
-    tour.getCost(), percentGapTrueMin(name, tour.getCost()));
+    tourCost, percentGapTrueMin(name, tourCost));
 
   SPDLOG_INFO("begin explicitization for {} (scale = 1)", name);
   auto gExpanded = g.explicitize(1);
   SPDLOG_INFO("begin construction for {}", name); // see the timestamp
   auto tourInt = xtsp::algo::farthestInsertion(gExpanded);
+  int tourCostInt = xtsp::evalTour(tour, gExpanded);
   SPDLOG_INFO("end construction with tour cost: {:d} (+{:.3f}% true min)", 
-    tourInt.getCost(), percentGapTrueMin(name, tourInt.getCost()));
+    tourCostInt, percentGapTrueMin(name, tourCostInt));
 
-  EXPECT_LT(percentGapTrueMin(name, tourInt.getCost()), 20); // typically won't be worse than 20 for this kind of toy problem
+  EXPECT_LT(percentGapTrueMin(name, tourCostInt), 20); // typically won't be worse than 20 for this kind of toy problem
 
 }
 
@@ -74,7 +76,7 @@ TEST_F(FarthestInsertionTest, pr114ImpactFirstPick)
   for (const size_t vPick1 : listPick1)
   {
     auto tour = xtsp::algo::farthestInsertion(g, vPick1);
-    tourCost(++cnt) = tour.getCost(); 
+    tourCost(++cnt) = xtsp::evalTour(tour, g); 
   }
   SPDLOG_INFO("Finished {:d} calls to farthestInsertion for {}", listPick1.size(), name);
   SPDLOG_INFO("Gap of tour cost to true min: {:.3f} (best), {:.3f} (mean), {:.3f} (worst)",
@@ -98,9 +100,12 @@ TEST_F(FarthestInsertionTest, u1817RuntimeTest)
   SPDLOG_INFO("begin construction for {}", name); // see the timestamp
   auto tourInt = xtsp::algo::farthestInsertion(gExpanded, 0);
   auto tf = std::chrono::high_resolution_clock::now();
+  auto tourCostAsInt = xtsp::evalTour(tourInt, gExpanded);
+  // technically we can also do this
+  // float tourCost = xtsp::evalTour(tourInt, g);
   SPDLOG_INFO("end construction with tour cost: {:d} (+{:.3f}% true min) in {:.3f} s", 
-    tourInt.getCost(), 
-    percentGapTrueMin(name, tourInt.getCost()),
+    tourCostAsInt, 
+    percentGapTrueMin(name, tourCostAsInt),
     (tf-t0).count()*1e-9); 
 }
 

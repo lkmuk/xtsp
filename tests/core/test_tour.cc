@@ -6,15 +6,15 @@
 #include <spdlog/fmt/bundled/format.h>
 
 
-TEST(hamiltonianTour, successfulInit)
+TEST(hamiltonianPermTour, successfulInit)
 {
-  xtsp::Tour<int> tour({3,2,1,0,4}, 5);
+  xtsp::PermTour tour({3,2,1,0,4});
   EXPECT_EQ(tour.size(), 5);
 }
 
 TEST(hamiltonianTour, directAccessSuccess)
 {
-  xtsp::Tour<int> tour({3,2,1,0,4}, 5);
+  xtsp::PermTour tour({3,2,1,0,4});
   EXPECT_EQ(tour.getVertex_(0), 3);
   EXPECT_EQ(tour.getVertex_(1), 2);
   EXPECT_EQ(tour.getVertex_(2), 1);
@@ -24,7 +24,7 @@ TEST(hamiltonianTour, directAccessSuccess)
 
 TEST(hamiltonianTour, circularBufAccessSuccess)
 {
-  xtsp::Tour<int> tour({3,2,1,0,4}, 5);
+  xtsp::PermTour tour({3,2,1,0,4});
   EXPECT_EQ(tour.getVertex(0), 3);
   EXPECT_EQ(tour.getVertex(1+5), 2);
   EXPECT_EQ(tour.getVertex(1+5+5), 2);
@@ -42,12 +42,10 @@ TEST(hamiltonianTour, costEval)
   };
   xtsp::CompleteGraph<int> g(true, costs);
   // Note that the tour cost won't be as high as 99999 as long as the edge (1-2) is not in the tour
-  xtsp::Tour<int> tour({2, 3, 0, 1}, 4);
+  xtsp::PermTour tour({2, 3, 0, 1});
 
   const int expectedCost = 1000+10+5+99999;
-  EXPECT_EQ(tour.evalTour(g), expectedCost);
-
-  EXPECT_EQ(tour.getCost(), expectedCost);
+  EXPECT_EQ(evalTour(tour, g), expectedCost);
 }
 
 // suffices to test the assertion is really execution.
@@ -58,11 +56,11 @@ TEST(hamiltonianTour, catchDuplicate)
 
   // change this
   const std::string expectedMsg =
-      "Invalid tour because city 2 appears at least twice (at tour positions 1 and 4.)";
+      "Invalid tour because city 2 appears at least twice";
   try
   {
     // change this
-    xtsp::Tour<int> tour (testArr, 5);
+    xtsp::PermTour tour (testArr, 5);
     FAIL() << fmt::format("Should have thrown an exception: {}", expectedMsg);
   }
   catch (const std::invalid_argument &actualException)
@@ -76,7 +74,8 @@ TEST(generalizedTour, successfulInit)
 {
   xtsp::Clustering clustering_(5, {{2},{0,4},{1,3}});
   auto clustering = std::make_shared<xtsp::Clustering>(clustering_);
-  xtsp::GeneralizedTour<int> gtour({3,2,4}, clustering);
+
+  auto gtour = xtsp::GeneralizedTour::fromPermutation({3,2,4}, clustering);
 
   EXPECT_EQ(gtour.numClusters(), clustering->numClusters());
   EXPECT_EQ(gtour.numVertices(), clustering->numVertices());
@@ -100,19 +99,8 @@ TEST(generalizedTour, circularBufAccessSuccess)
   xtsp::Clustering clustering_(7, {{0,1,2,4}, {5,6}, {3}});
   auto clustering = std::make_shared<xtsp::Clustering>(clustering_);
 
-
-  xtsp::GeneralizedTour<int> gtour({3,5,4}, clustering);
-  EXPECT_EQ(gtour.getVertex(1+9), 5);
-}
-TEST(generalizedTour, costValueCanBeUpdated)
-{
-  xtsp::Clustering clustering_(7, {{0,1,2,4}, {5,6}, {3}});
-  auto clustering = std::make_shared<xtsp::Clustering>(clustering_);
-
-  xtsp::GeneralizedTour<int> gtour({3,5,4}, clustering);
-  gtour.getCostMutableRef() = 111;
-  gtour.getCostMutableRef() += 32;
-  EXPECT_EQ(gtour.getCost(), 143);
+  auto gtour = xtsp::GeneralizedTour::fromPermutation({3,5,4}, clustering);
+  EXPECT_EQ(gtour.getTour()->getVertex(1+9), 5);
 }
 
 TEST(generalizedTour, catchRevisitClusterWithDifferentVertices)
@@ -128,7 +116,7 @@ TEST(generalizedTour, catchRevisitClusterWithDifferentVertices)
   try
   {
     // change this
-    xtsp::GeneralizedTour<int> gtour (testPerm, clustering);
+    auto gtour = xtsp::GeneralizedTour::fromPermutation (testPerm, clustering);
     FAIL() << fmt::format("Should have thrown an exception: {}", expectedMsg);
   }
   catch (const std::invalid_argument &actualException)
@@ -138,47 +126,72 @@ TEST(generalizedTour, catchRevisitClusterWithDifferentVertices)
 }
 
 
-TEST(doTwoEdgeExchange, simplestUncrossingExample)
+class SimpleTwoEdgeExchange : public testing::Test
 {
+protected:
   // only FYI not really critical in this context
+  //
+  // In fact, this is the simplest uncrossing example
+  // with 4 points on a unit circle
   Eigen::Matrix<float, 4, 2> xy {
     {1, 0},
     {0, 1},
     {-1, 0},
     {0, -1}
   };
-  xtsp::ImplicitCompleteGraph<> g(xy);
 
-  float expectedOldTourCost = std::sqrt(2)*2 + 2*2;
-  float expectedNewTourCost = std::sqrt(2)*4;
+  xtsp::ImplicitCompleteGraph<float> g = xtsp::ImplicitCompleteGraph<float>(xy);
 
-  std::vector<size_t> originalTourDat {2, 0, 3, 1};
-  xtsp::Tour<float> tour (originalTourDat, 4);
-  tour.evalTour(g);
-  EXPECT_FLOAT_EQ(tour.getCost(), expectedOldTourCost);
-
-  spdlog::set_level(spdlog::level::debug);
+  const float expectedOldTourCost = std::sqrt(2)*2 + 2*2;
+  const float expectedNewTourCost = std::sqrt(2)*4;
+  std::vector<size_t> originalTourDat = {2, 0, 3, 1};
+  xtsp::PermTour tour =  xtsp::PermTour(originalTourDat);
+  // by eyeballing, we identify a Two-opt
   const size_t rankA = 1; // vertex 0
   // const size_t rankB = 2; // vertex 3 (only FYI)
-
   // ensure rankC >= rank A + 1 (otherwise += numVertices)
   const size_t rankC = 3; // vertex 1 (in general the rankC >= rankB)
   // const size_t rankD = 0; // vertex 2 (only FYI)
-  SPDLOG_DEBUG("Tour sequence (before): {:d}-{:d}-{:d}-{:d}-",
-      tour.getVertex_(0), 
-      tour.getVertex_(1), 
-      tour.getVertex_(2), 
-      tour.getVertex_(3)
-    );
-  tour.exchangeTwoEdges(rankA, rankC, expectedOldTourCost-expectedNewTourCost);
-  tour.assertHamiltonian(xy.rows());
-  EXPECT_FLOAT_EQ(tour.getCost(), expectedNewTourCost); // check if the cached cost is updated
 
-  EXPECT_FLOAT_EQ(tour.evalTour(g), expectedNewTourCost); // check if it's legit
-  SPDLOG_DEBUG("Tour sequence (after):  {:d}-{:d}-{:d}-{:d}-",
+  const size_t vA = 0;
+  const size_t vC = 1;
+
+  void SetUp() override
+  {
+    SPDLOG_DEBUG("Tour sequence (before): {:d}-{:d}-{:d}-{:d}-",
       tour.getVertex_(0), 
       tour.getVertex_(1), 
       tour.getVertex_(2), 
       tour.getVertex_(3)
     );
+    EXPECT_FLOAT_EQ(xtsp::evalTour(tour, g), expectedOldTourCost) 
+      << "bug in the test implementation";
+  }
+
+  void checkResultAfterTwoOpt() const
+  {
+    tour.isHamiltonian();
+
+    EXPECT_FLOAT_EQ(xtsp::evalTour(tour, g), expectedNewTourCost); // check if it's legit
+    SPDLOG_DEBUG("Tour sequence (after):  {:d}-{:d}-{:d}-{:d}-",
+        tour.getVertex_(0), 
+        tour.getVertex_(1), 
+        tour.getVertex_(2), 
+        tour.getVertex_(3)
+    );
+  }
+};
+
+TEST_F(SimpleTwoEdgeExchange, permTourRankBased)
+{
+  spdlog::set_level(spdlog::level::debug);
+  tour.exchangeTwoEdges_rankBased(rankA, rankC);
+  checkResultAfterTwoOpt();
+}
+
+TEST_F(SimpleTwoEdgeExchange, permTourNative)
+{
+  spdlog::set_level(spdlog::level::debug);
+  tour.exchangeTwoEdges(vA, vC);
+  checkResultAfterTwoOpt();
 }

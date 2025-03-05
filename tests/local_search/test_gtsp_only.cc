@@ -73,8 +73,8 @@ protected:
       // pick the vertex of the lowest index.
       initTour.emplace_back(members[0]);
     }
-    m_tour = std::make_unique<xtsp::GeneralizedTour<float>>(
-      initTour, m_clustering);
+    auto m_tour_ = xtsp::GeneralizedTour::fromPermutation(initTour, m_clustering);
+    m_tour = std::make_unique<xtsp::GeneralizedTour>(std::move(m_tour_));
     for (size_t tr = 0; tr < m_clustering->numClusters(); ++tr)
     {
       ASSERT_EQ(m_clusterSeq[tr], m_tour->getClusterIdByRank(tr)) 
@@ -85,14 +85,14 @@ protected:
 
     // float oldTourCost = m_tour->evalTour(*m_graph);
     // std::cout << "Original cost = " << oldTourCost << std::endl;
-    xtsp::GeneralizedTour<float> optimizedTour(m_trueOptGenTour, m_clustering);
-    float reevaluatedMinTourCost = optimizedTour.evalTour(*m_graph);
+    auto optimizedTour = xtsp::GeneralizedTour::fromPermutation(m_trueOptGenTour, m_clustering);
+    float reevaluatedMinTourCost = xtsp::evalTour(*optimizedTour.getTour(), *m_graph);
     EXPECT_FLOAT_EQ(reevaluatedMinTourCost, m_trueOptCost) 
       << "Buggy test implementation: Wrong computed optimal tour cost";
   }
   std::shared_ptr<xtsp::Clustering> m_clustering = nullptr;
   // we will somehow initialize it so that it satisfy the cluster sequence 
-  std::unique_ptr<xtsp::GeneralizedTour<float>> m_tour = nullptr;
+  std::unique_ptr<xtsp::GeneralizedTour> m_tour = nullptr;
   std::unique_ptr<xtsp::ImplicitCompleteGraph<float>> m_graph = nullptr;
   const std::vector<size_t> m_clusterSeq {0, 4, 5, 1, 3, 2};
   // The expected generalized tour, in which the cluster sequence is kept
@@ -126,13 +126,13 @@ TEST_F(ClusterOptimizerToyExample, recommendedApi)
 
   // System under test
   xtsp::algo::GtspClusterOptimizer<float> solver(m_clustering->numVertices());
-  solver.improve(*m_tour, *m_graph, cutCluster);
+  auto newCost = solver.improve(*m_tour, *m_graph, cutCluster);
 
-  ASSERT_EQ(m_tour->size(), m_clustering->numClusters());
-  EXPECT_FLOAT_EQ(m_tour->getCost(), m_trueOptCost);
+  ASSERT_EQ(m_tour->numClusters(), m_clustering->numClusters());
+  EXPECT_FLOAT_EQ(newCost, m_trueOptCost);
   for (size_t rank = 0; rank < m_clustering->numClusters(); ++rank)
   {
-    EXPECT_EQ(m_tour->getVertex(rank), m_trueOptGenTour[rank]) 
+    EXPECT_EQ(m_tour->getTour()->getVertex(rank), m_trueOptGenTour[rank]) 
       << "at tour rank = " << rank;
   }
 }
