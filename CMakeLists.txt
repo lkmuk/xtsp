@@ -23,6 +23,7 @@ add_library(${PROJECT_NAME}
     src/core/tsplib_io.cc
     src/core/tsplib_io_seek_impl.cc
     src/initialization/insertion.cc
+    src/local_search/kopt.cc
     src/local_search/gtsp_only.cc
     src/toolbox/ring_ops.cc
 )
@@ -68,6 +69,7 @@ add_test(test_constructTour ${CMAKE_BINARY_DIR}/test_constructTour)
 
 add_executable(test_local_search
     tests/local_search/test_gtsp_only.cc
+    tests/local_search/test_kopt.cc
 )
 target_link_libraries(test_local_search PRIVATE ${PROJECT_NAME} GTest::gtest GTest::gtest_main)
 add_test(test_local_search ${CMAKE_BINARY_DIR}/test_local_search)
