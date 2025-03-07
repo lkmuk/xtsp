@@ -20,6 +20,13 @@ namespace xtsp
     }
   }
 
+  std::string AbstractTour::print() const
+  {
+    std::stringstream ss;
+    print(ss);
+    return ss.str(); 
+  }
+
 
   bool AbstractTour::isOneStepAhead(size_t vStart, size_t vGoal) const
   {
@@ -98,6 +105,7 @@ namespace xtsp
   PermTour::PermTour(const std::vector<size_t> &sequence, int maxNumVertices, bool checks)
     : m_seq(sequence)
     , m_N((maxNumVertices < 0) ? sequence.size() : maxNumVertices)
+    , m_HomeId(sequence[0])
   {
     if (sequence.size() > m_N)
       throw std::invalid_argument(
@@ -117,7 +125,7 @@ namespace xtsp
 
   size_t PermTour::getDepotId() const
   {
-    return m_seq[0];
+    return m_HomeId;
   }
 
   void PermTour::exchangeTwoEdges_rankBased(size_t rankA, size_t rankC, bool strict)
@@ -231,14 +239,14 @@ namespace xtsp
     const size_t vB = next(vA);
     const size_t vD = next(vC);
 
-    /// currently we always reverse CD
+    /// currently we always reverse BC
     /// i.e., ignoring the strict-flag
 
-    // if the segment CD has some node(s) in between, then ...
+    // if the segment BC has some node(s) in between, then ...
     // modify the underlying data while traversing along 
     // the (original) tour direction.
-    size_t vHead = next(vC);
-    while (vHead != vD) 
+    size_t vHead = next(vB);
+    while (vHead != vC) 
     {
       std::swap(m_dat[vHead].prev, m_dat[vHead].next);
       vHead = m_dat[vHead].prev->id; // i.e., next before the flip

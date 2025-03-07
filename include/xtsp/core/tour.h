@@ -67,6 +67,7 @@ namespace xtsp
     virtual bool hasNoRevisit() const;
     virtual bool allElementsAreValid() const;
     virtual void print(std::ostream &o) const;
+    virtual std::string print() const;
 
     // following the implied tour direction
     virtual bool isOneStepAhead(size_t vStart, size_t vGoal) const;
@@ -121,10 +122,12 @@ namespace xtsp
      * for symmetric TSPs and symmetric Generalized TSPs.
      * 
      * Note that this operation requires flipping either 
-     * segment AB or CD. If you really want to stipulate 
-     * flipping CD (more relevant for ATSP), then 
+     * segment AD or BC. If you really want to stipulate 
+     * flipping BC (more relevant for ATSP), then 
      * set \p strict as true. Otherwise it's up to the 
      * implementation which one to flip.
+     * 
+     * The depot ID shall remain unchanged
      * 
      * @param vA ID of vertex A
      * @param vC ID of vertex C 
@@ -134,7 +137,7 @@ namespace xtsp
 
     // virtual void rotateRShift(int v) = 0;
     // virtual void reflectAboutDepot() = 0;
-  protected:
+  public:
     // see Wdelete-non-abstract-non-virtual-dtor
     virtual ~AbstractTour() = default;
   };
@@ -191,14 +194,23 @@ namespace xtsp
 
     // O(1) access
     // ID of the vertex after the requested vertex (in rank representation)
+    ///
+    /// Here, the rank is defined as the position of vertexId in the array.
+    /// \p getRank_(depotId) needs not be 0.
     size_t nextByRank(size_t rank) const;
 
     /// @brief O(n) reverse look-up where n = this->size()
+    ///
+    /// Here, the rank is defined as the position of vertexId in the array.
+    /// \p getRank_(depotId) needs not be 0.
     /// @param vertexId
     /// @param return -1 if not found, otherwise the tour rank
     size_t getRank_(size_t vertexId) const;
 
     /// @brief lower-level access
+    ///
+    /// Here, the rank is defined as the position of vertexId in the array.
+    /// \p getRank_(depotId) needs not be 0.
     /// @param tourRank must be in {0, 1, ..., this->size()-1}
     /// @return the index of the vertex at the requested tour position
     /// @see Tour<CostTy>::getVertex
@@ -209,7 +221,10 @@ namespace xtsp
 
     /// @brief higher-level access 
     ///        where we treat the tour as a circular buffer
-    ///        (quite useful when implementing sth like 2-opt)
+    ///        (quite useful when implementing sth like 2-opt).
+    ///
+    /// Here, the rank is defined as the position of vertexId in the array.
+    /// \p getRank_(depotId) needs not be 0.
     /// @param tourRank can be any non-negative number,
     /// @return the index of the vertex at the requested tour position
     size_t getVertex(size_t tourRank) const
@@ -252,7 +267,7 @@ namespace xtsp
     std::vector<size_t> m_seq;
     // max. number of entries in the tour
     const size_t m_N; 
-
+    size_t m_HomeId;
     friend class GeneralizedTour;
   };
 

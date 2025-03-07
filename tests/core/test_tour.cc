@@ -5,6 +5,7 @@
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_INFO
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/bundled/format.h>
+#include "xtsp/core/utils.h"
 
 
 TEST(hamiltonianPermTour, successfulInit)
@@ -144,6 +145,36 @@ TEST(generalizedTour, catchRevisitClusterWithDifferentVertices)
   }
 }
 
+static void runTwoEdgeExchangeStrict(
+  xtsp::AbstractTour& tour,
+  size_t vA, size_t vC,
+  std::vector<size_t> expectedResult, 
+  int maxNumVertex = -1)
+{
+  SPDLOG_INFO("Tour (before)  : {}", tour.print());
+  tour.exchangeTwoEdges(vA, vC, true);
+  SPDLOG_INFO("Tour (after)   : {}", tour.print());
+  SPDLOG_INFO("Tour (expected): {}", xtsp::PermTour(expectedResult, maxNumVertex, false).print());
+}
+
+template <typename TourDataType>
+static void addTourDtypeIntoTestRunner(
+  std::vector<std::pair<std::unique_ptr<xtsp::AbstractTour>, std::string>> &tours, 
+  const std::vector<size_t> &permData)
+{
+  auto tour = std::make_unique<TourDataType>(permData);
+  tours.emplace_back(std::make_pair<std::unique_ptr<xtsp::AbstractTour>, std::string>
+    (std::move(tour), typeid(TourDataType).name()));
+}
+
+static std::vector<std::pair<std::unique_ptr<xtsp::AbstractTour>, std::string>> 
+    addAllTourDtypeIntoTestRunner(const std::vector<size_t> &permData)
+{
+  std::vector<std::pair<std::unique_ptr<xtsp::AbstractTour>, std::string>> tours;
+  addTourDtypeIntoTestRunner<xtsp::PermTour>(tours, permData);
+  addTourDtypeIntoTestRunner<xtsp::AdjTabTour>(tours, permData);
+  return tours;
+}
 
 class SimpleTwoEdgeExchange : public testing::Test
 {
@@ -152,85 +183,141 @@ protected:
   //
   // In fact, this is the simplest uncrossing example
   // with 4 points on a unit circle
-  Eigen::Matrix<float, 4, 2> xy {
-    {1, 0},
-    {0, 1},
-    {-1, 0},
-    {0, -1}
-  };
+  // Eigen::Matrix<float, 4, 2> xy {
+  //   {1, 0},
+  //   {0, 1},
+  //   {-1, 0},
+  //   {0, -1}
+  // };
+  // xtsp::ImplicitCompleteGraph<float> g = xtsp::ImplicitCompleteGraph<float>(xy);
+  // const float expectedOldTourCost = std::sqrt(2)*2 + 2*2;
+  // const float expectedNewTourCost = std::sqrt(2)*4;
 
-  xtsp::ImplicitCompleteGraph<float> g = xtsp::ImplicitCompleteGraph<float>(xy);
-
-  const float expectedOldTourCost = std::sqrt(2)*2 + 2*2;
-  const float expectedNewTourCost = std::sqrt(2)*4;
   std::vector<size_t> originalTourDat = {2, 0, 3, 1};
-  xtsp::PermTour tourPermType =  xtsp::PermTour(originalTourDat);
-  xtsp::AdjTabTour tourAdjType = xtsp::AdjTabTour(originalTourDat);
+  std::vector<size_t> expectedNewTourDat = {2, 1, 0, 3};
   // by eyeballing, we identify a Two-opt
-  const size_t rankA = 2;
-  const size_t rankC = 0+g.numVertices();
   const size_t vA = 3;
   const size_t vC = 2;
 
   void SetUp() override
   {
     spdlog::set_level(spdlog::level::debug);
-    SPDLOG_DEBUG("Tour sequence (before): {:d}-{:d}-{:d}-{:d}-",
-      tourPermType.getVertex_(0), 
-      tourPermType.getVertex_(1), 
-      tourPermType.getVertex_(2), 
-      tourPermType.getVertex_(3)
-    );
-    EXPECT_FLOAT_EQ(xtsp::evalTour(tourPermType, g), expectedOldTourCost) 
-      << "bug in the test implementation";
   }
 
 };
 
-TEST_F(SimpleTwoEdgeExchange, permTourRankBased)
+TEST_F(SimpleTwoEdgeExchange, PermTour)
 {
-  tourPermType.exchangeTwoEdges_rankBased(rankA, rankC, true);
-  EXPECT_TRUE(tourPermType.isHamiltonian());
-  EXPECT_FLOAT_EQ(xtsp::evalTour(tourPermType, g), expectedNewTourCost);
-  EXPECT_EQ(tourPermType.getVertex_(0), 1);
-  EXPECT_EQ(tourPermType.getVertex_(1), 0);
-  EXPECT_EQ(tourPermType.getVertex_(2), 3);
-  EXPECT_EQ(tourPermType.getVertex_(3), 2);
-  
+  xtsp::PermTour tour(this->originalTourDat);
+
+  runTwoEdgeExchangeStrict(tour, vA, vC, this->expectedNewTourDat);
+
+  EXPECT_TRUE(tour.isHamiltonian());
+  size_t vHead = tour.getDepotId();
+  for (size_t rank = 0; rank < tour.size(); ++rank)
+  {
+    EXPECT_EQ(vHead, expectedNewTourDat[rank]) << "rank = " << rank;
+    vHead = tour.next(vHead);
+  }  
 }
 
-TEST_F(SimpleTwoEdgeExchange, permTour)
+TEST_F(SimpleTwoEdgeExchange, AdjTabTour)
 {
-  tourPermType.exchangeTwoEdges(vA, vC, true);
-  EXPECT_TRUE(tourPermType.isHamiltonian());
-  EXPECT_FLOAT_EQ(xtsp::evalTour(tourPermType, g), expectedNewTourCost);
-  EXPECT_EQ(tourPermType.getVertex_(0), 1);
-  EXPECT_EQ(tourPermType.getVertex_(1), 0);
-  EXPECT_EQ(tourPermType.getVertex_(2), 3);
-  EXPECT_EQ(tourPermType.getVertex_(3), 2);
-}
-
-TEST_F(SimpleTwoEdgeExchange, adjTabTour)
-{
-
-  EXPECT_TRUE(tourAdjType.isHamiltonian());
-  EXPECT_FLOAT_EQ(xtsp::evalTour(tourAdjType, g), expectedOldTourCost);
-  
-  EXPECT_TRUE(tourAdjType.isTwoPlusStepsAhead(vA,vC));
-  EXPECT_TRUE(tourAdjType.isTwoPlusStepsAhead(vC,vA));
+  xtsp::AdjTabTour tour(this->originalTourDat);
+  EXPECT_TRUE(tour.isHamiltonian());
+  EXPECT_TRUE(tour.isTwoPlusStepsAhead(vA,vC));
+  EXPECT_TRUE(tour.isTwoPlusStepsAhead(vC,vA));
 
   // test subject
-  tourAdjType.exchangeTwoEdges(vA, vC, true);
-  
-  EXPECT_TRUE(tourAdjType.isHamiltonian());
-  std::cout << "After 2-opt: ";
-  tourAdjType.print(std::cout);
-  std::cout << std::endl;
-  // possible perm:  2 - 1 - 0 - 3 
-  //      1 - 0 - 3 - 2
-  EXPECT_EQ(tourAdjType.next(0), 3);
-  EXPECT_EQ(tourAdjType.next(1), 0);
-  EXPECT_EQ(tourAdjType.next(2), 1);
-  EXPECT_EQ(tourAdjType.next(3), 2);
-  EXPECT_FLOAT_EQ(xtsp::evalTour(tourAdjType, g), expectedNewTourCost);
+  runTwoEdgeExchangeStrict(tour, vA, vC, expectedNewTourDat);
+
+  EXPECT_TRUE(tour.isHamiltonian());
+  size_t vHead = tour.getDepotId();
+  for (size_t rank = 0; rank < tour.size(); ++rank)
+  {
+    EXPECT_EQ(vHead, expectedNewTourDat[rank]) << "rank = " << rank;
+    vHead = tour.next(vHead);
+  }
+}
+
+class TwoEdgeExchangeLastRankAsVertexA : public testing::Test
+{
+protected:
+  std::vector<size_t> m_seqOld {{0, 1, 4, 7, 8, 2, 6, 3, 5}};
+  size_t m_vA = 5;
+  size_t m_vC = 8;
+  std::vector<size_t> m_seqNewExpectedFlipBC {{0, 2, 6, 3, 5, 8, 7, 4, 1}};
+  void SetUp() override
+  {
+    ASSERT_EQ(m_seqOld.size(), m_seqNewExpectedFlipBC.size()) << "Wrong test implementation";
+    xtsp::utils::assertIsPermutation(9, m_seqOld);
+    xtsp::utils::assertIsPermutation(9, m_seqNewExpectedFlipBC);
+  }
+};
+
+TEST_F(TwoEdgeExchangeLastRankAsVertexA, PermTour)
+{
+  xtsp::PermTour tour (m_seqOld);
+  runTwoEdgeExchangeStrict(tour, m_vA, m_vC, m_seqNewExpectedFlipBC);
+
+  EXPECT_TRUE(tour.isHamiltonian());
+  size_t vHead = tour.getDepotId();
+  for (size_t rank = 0; rank < tour.size(); ++rank)
+  {
+    EXPECT_EQ(vHead, m_seqNewExpectedFlipBC[rank]) << "rank = " << rank;
+    vHead = tour.next(vHead);
+  }
+}
+
+TEST_F(TwoEdgeExchangeLastRankAsVertexA, AdjTabTour)
+{
+  xtsp::AdjTabTour tour (m_seqOld);
+  runTwoEdgeExchangeStrict(tour, m_vA, m_vC, m_seqNewExpectedFlipBC);
+  EXPECT_TRUE(tour.isHamiltonian());
+  size_t vHead = tour.getDepotId();
+  for (size_t rank = 0; rank < tour.size(); ++rank)
+  {
+    EXPECT_EQ(vHead, m_seqNewExpectedFlipBC[rank]) << "rank = " << rank;
+    vHead = tour.next(vHead);
+  }
+}
+
+TEST(TwoEdgeExchangeMore, vertexBImmediatelyBeforeVertexC)
+{
+  std::vector<size_t> originalPerm   {0, 7, 2, 5, 4, 6, 1, 3};
+  size_t vA = 1, vC = 0;
+  std::vector<size_t> expectedResult {0, 3, 7, 2, 5, 4, 6, 1};
+  auto testToursWithDTypeName = addAllTourDtypeIntoTestRunner(originalPerm);
+  for (auto& [tour, tourDTypeName] : testToursWithDTypeName)
+  {
+    SPDLOG_INFO("Testing Datatype {}", tourDTypeName);
+    runTwoEdgeExchangeStrict(*tour, vA, vC, expectedResult);
+    EXPECT_TRUE(tour->isHamiltonian()) << tourDTypeName;
+    size_t vHead = tour->getDepotId();
+    for (size_t rank = 0; rank < tour->size(); ++rank)
+    {
+      EXPECT_EQ(vHead, expectedResult[rank]) << tourDTypeName << ", " << "rank = " << rank;
+      vHead = tour->next(vHead);
+    }
+  }
+}
+
+TEST(TwoEdgeExchangeMore, vertexDImmediatelyBeforeVertexA)
+{
+  std::vector<size_t> originalPerm   {0, 7, 2, 5, 4, 6, 1, 3};
+  size_t vA = 3, vC = 6;
+  std::vector<size_t> expectedResult {0, 1, 3, 6, 4, 5, 2, 7};
+  auto testToursWithDTypeName = addAllTourDtypeIntoTestRunner(originalPerm);
+  for (auto& [tour, tourDTypeName] : testToursWithDTypeName)
+  {
+    SPDLOG_INFO("Testing Datatype {}", tourDTypeName);
+    runTwoEdgeExchangeStrict(*tour, vA, vC, expectedResult);
+    EXPECT_TRUE(tour->isHamiltonian()) << tourDTypeName;
+    size_t vHead = tour->getDepotId();
+    for (size_t rank = 0; rank < tour->size(); ++rank)
+    {
+      EXPECT_EQ(vHead, expectedResult[rank]) << tourDTypeName << ", " << "rank = " << rank;
+      vHead = tour->next(vHead);
+    }
+  }
 }

@@ -11,7 +11,7 @@ namespace xtsp::internal
   template <typename T>
   void reverseRingSegment_strict(std::vector<T> &ring, size_t rankStart, size_t rankEnd)
   {
-    int segSz = (int)(rankEnd) - (int)(rankStart);
+    int segSz = (int)(rankEnd) - (int)(rankStart) + 1;
     if (segSz > (int)ring.size())
       throw std::invalid_argument("invalid segment specification");
     if (segSz <= 0)
