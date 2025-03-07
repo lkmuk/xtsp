@@ -3,7 +3,7 @@
 
 #include "xtsp/core/complete_graph.h"
 #include "xtsp/core/tour.h"
-#include "xtsp/dyn_prog.h"
+#include "xtsp/algorithm_utils/dyn_prog.h"
 
 namespace xtsp
 {

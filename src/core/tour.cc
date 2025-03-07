@@ -2,8 +2,8 @@
 #include "xtsp/core/tour_alternatives.h"
 
 #include "xtsp/core/utils.h"
+#include "xtsp/algorithm_utils/work_buffer.h"
 #include "../toolbox/ring_ops.h"
-#include "../toolbox/work_buffer.h"
 
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/bundled/format.h>

@@ -4,7 +4,7 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/bundled/ranges.h>
 
-#include "../toolbox/work_buffer.h"
+#include "xtsp/algorithm_utils/work_buffer.h"
 
 namespace xtsp::algo
 {
