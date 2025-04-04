@@ -40,6 +40,9 @@ add_executable(demo_load_geom_tsp
 )
 target_link_libraries(demo_load_geom_tsp ${PROJECT_NAME})
 
+add_executable(demo_solve_tsp  demo/demo_solve_TSP.cc)
+target_link_libraries(demo_solve_tsp ${PROJECT_NAME})
+
 enable_testing()
 
 add_executable(test_core
