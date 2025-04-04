@@ -116,6 +116,7 @@ namespace xtsp
       /// @todo unit test coverage
       xtsp::utils::assertAllValid(m_N, sequence, "tour", "city ID");
     }
+    updateCacheAfterShuffling();
   }
 
   size_t PermTour::next(size_t v) const
@@ -137,6 +138,7 @@ namespace xtsp
       xtsp::internal::reverseRingSegment_strict(m_seq, rankB, rankC);
     else
       xtsp::internal::reverseRingSegment_smart(m_seq, rankB, rankC);
+    updateCacheAfterShuffling();
   }
   void PermTour::exchangeTwoEdges(size_t vA, size_t vC, bool strict)
   {
@@ -154,16 +156,26 @@ namespace xtsp
     exchangeTwoEdges_rankBased(rankA, rankC, strict);
   }
 
+  void PermTour::updateCacheAfterShuffling()
+  {
+    for (size_t rank = 0; rank < size(); ++rank)
+    {
+      m_cache_id2rank_[m_seq[rank]] = rank;
+    }
+  }
+
+
   ////////////////////////////////////////////////////
   ///   Some native getters of PermTour
   ////////////////////////////////////////////////////
 
   size_t PermTour::getRank_(size_t vertexId) const
   {
-    auto ite = std::find(m_seq.cbegin(), m_seq.cend(), vertexId);
-    if (ite == m_seq.cend())
-      throw ("Cannot find the requested vertex ID in the tour");
-    return std::distance(m_seq.cbegin(), ite);
+    // auto ite = std::find(m_seq.cbegin(), m_seq.cend(), vertexId);
+    // if (ite == m_seq.cend())
+    //   throw ("Cannot find the requested vertex ID in the tour");
+    // return std::distance(m_seq.cbegin(), ite);
+    return m_cache_id2rank_[vertexId];
   }
 
 

@@ -108,6 +108,10 @@ namespace xtsp
      *     :                                     :
      *     +.....................................+
      * ```
+     * 
+     * In the literature, this change is sometimes also referred
+     * to as a "flip.""
+     * 
      * If it reduces the tour cost, it's called a 2-opt move.
      * This operation doesn't care whether it's 2-opt and
      * finding a 2-opt move is outside the scope of this class.
@@ -268,6 +272,12 @@ namespace xtsp
     // max. number of entries in the tour
     const size_t m_N; 
     size_t m_HomeId;
+    std::vector<size_t> m_cache_id2rank_ 
+      = std::vector<size_t>(m_N, std::numeric_limits<size_t>::max());
+    // assumption: the tour passes through the same set of vertices.
+    // to avoid such overhead, you might want to prefer the 
+    // best-improvement instead of first-improvement approach.
+    void updateCacheAfterShuffling();
     friend class GeneralizedTour;
   };
 
